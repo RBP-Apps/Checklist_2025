@@ -671,13 +671,13 @@ export default function AdminDashboard() {
     return true;
   });
 
-  // Get tasks by view with date-based filtering for both delegation and checklist
+  // Get tasks by view with date-based filtering - modified upcoming for delegation
   const getTasksByView = (view) => {
     const viewFilteredTasks = filteredTasks.filter((task) => {
       // Skip completed tasks in all views
       if (task.status === "completed") return false;
 
-      // Apply date-based filtering for both delegation and checklist modes
+      // Apply date-based filtering
       const taskStartDate = parseDateFromDDMMYYYY(task.taskStartDate);
       if (!taskStartDate) return false;
 
@@ -686,8 +686,16 @@ export default function AdminDashboard() {
           // Show tasks due today (pending only)
           return isDateToday(task.taskStartDate);
         case "upcoming":
-          // Show tasks due tomorrow (pending only)
-          return isDateTomorrow(task.taskStartDate);
+          if (dashboardType === "delegation") {
+            // For DELEGATION: Show all pending tasks from tomorrow onwards (exclude today)
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            return taskStartDate >= tomorrow;
+          } else {
+            // For CHECKLIST: Show tasks due tomorrow only
+            return isDateTomorrow(task.taskStartDate);
+          }
         case "overdue":
           // Show tasks with start dates in the past (excluding today)
           return isDateInPast(task.taskStartDate) && !isDateToday(task.taskStartDate);
