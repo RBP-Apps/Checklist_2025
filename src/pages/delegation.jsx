@@ -205,9 +205,9 @@ function DelegationDataPage() {
     return historyData
       .filter((item) => {
         // User filter: For non-admin users, check column H (col7) matches username
-        const userMatch = userRole === "admin" || 
-          (item["col7"] && item["col7"].toLowerCase() === username.toLowerCase())
-        
+        const userMatch =
+          userRole === "admin" || (item["col7"] && item["col7"].toLowerCase() === username.toLowerCase())
+
         if (!userMatch) return false
 
         const matchesSearch = debouncedSearchTerm
@@ -318,6 +318,7 @@ function DelegationDataPage() {
                 rowData["col6"] = rowValues[6] || ""
                 rowData["col7"] = rowValues[7] || "" // Column H - User name
                 rowData["col8"] = rowValues[8] || "" // Column I - Task
+                rowData["col9"] = rowValues[9] || "" // Column J - Given By
 
                 return rowData
               })
@@ -373,7 +374,7 @@ function DelegationDataPage() {
         }
 
         // REMOVED DATE FILTERING - Show all data regardless of date
-        
+
         const googleSheetsRowIndex = rowIndex + 1
         const taskId = rowValues[1] || ""
         const stableId = taskId
@@ -606,6 +607,7 @@ function DelegationDataPage() {
               "", // Column G
               username, // Column H - Store the logged-in username
               item["col5"] || "", // Column I - Task description from col5
+              item["col3"] || "", // Column J - Given By from original task
             ]
 
             const insertFormData = new FormData()
@@ -811,6 +813,9 @@ function DelegationDataPage() {
                           User
                         </th>
                       )}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Given By
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -873,11 +878,14 @@ function DelegationDataPage() {
                               <div className="text-sm text-gray-900">{history["col7"] || "—"}</div>
                             </td>
                           )}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{history["col9"] || "—"}</div>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={userRole === "admin" ? 8 : 7} className="px-6 py-4 text-center text-gray-500">
+                        <td colSpan={userRole === "admin" ? 9 : 8} className="px-6 py-4 text-center text-gray-500">
                           {searchTerm || startDate || endDate
                             ? "No historical records matching your filters"
                             : "No completed records found"}
@@ -1100,9 +1108,7 @@ function DelegationDataPage() {
                   ) : (
                     <tr>
                       <td colSpan={12} className="px-6 py-4 text-center text-gray-500">
-                        {searchTerm
-                          ? "No tasks matching your search"
-                          : "No pending tasks found"}
+                        {searchTerm ? "No tasks matching your search" : "No pending tasks found"}
                       </td>
                     </tr>
                   )}
