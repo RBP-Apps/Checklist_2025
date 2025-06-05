@@ -390,6 +390,91 @@ export default function AssignTask() {
     }
   };
 
+  // Helper function to find the closest working day to a target date
+  const findClosestWorkingDayIndex = (workingDays, targetDateStr) => {
+    // Parse the target date
+    const [targetDay, targetMonth, targetYear] = targetDateStr.split('/').map(Number);
+    const targetDate = new Date(targetYear, targetMonth - 1, targetDay);
+    
+    // Find the closest working day (preferably after the target date)
+    let closestIndex = -1;
+    let minDifference = Infinity;
+    
+    for (let i = 0; i < workingDays.length; i++) {
+      const [workingDay, workingMonth, workingYear] = workingDays[i].split('/').map(Number);
+      const currentDate = new Date(workingYear, workingMonth - 1, workingDay);
+      
+      // Calculate difference in days
+      const difference = Math.abs((currentDate - targetDate) / (1000 * 60 * 60 * 24));
+      
+      if (currentDate >= targetDate && difference < minDifference) {
+        minDifference = difference;
+        closestIndex = i;
+      }
+    }
+    
+    // Return -1 if no working day found after the target date
+    // Don't return any fallback index
+    return closestIndex;
+  };
+
+  // Helper function to find the date for the end of a specific week in a month
+  const findEndOfWeekDate = (date, weekNumber, workingDays) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    // Get all working days in the target month
+    const daysInMonth = workingDays.filter(dateStr => {
+      const [, m, y] = dateStr.split('/').map(Number);
+      return y === year && m === month + 1;
+    });
+    
+    // Sort them chronologically
+    daysInMonth.sort((a, b) => {
+      const [dayA] = a.split('/').map(Number);
+      const [dayB] = b.split('/').map(Number);
+      return dayA - dayB;
+    });
+    
+    // Group by weeks (assuming Monday is the first day of the week)
+    const weekGroups = [];
+    let currentWeek = [];
+    let lastWeekDay = -1;
+    
+    for (const dateStr of daysInMonth) {
+      const [workingDay2, m, y] = dateStr.split('/').map(Number);
+      const dateObj = new Date(y, m - 1, workingDay2);
+      const weekDay = dateObj.getDay(); // 0 for Sunday, 1 for Monday, etc.
+      
+      if (weekDay <= lastWeekDay || currentWeek.length === 0) {
+        if (currentWeek.length > 0) {
+          weekGroups.push(currentWeek);
+        }
+        currentWeek = [dateStr];
+      } else {
+        currentWeek.push(dateStr);
+      }
+      
+      lastWeekDay = weekDay;
+    }
+    
+    if (currentWeek.length > 0) {
+      weekGroups.push(currentWeek);
+    }
+    
+    // Return the last day of the requested week
+    if (weekNumber === -1) {
+      // Last week of the month
+      return weekGroups[weekGroups.length - 1]?.[weekGroups[weekGroups.length - 1].length - 1] || daysInMonth[daysInMonth.length - 1];
+    } else if (weekNumber > 0 && weekNumber <= weekGroups.length) {
+      // Specific week
+      return weekGroups[weekNumber - 1]?.[weekGroups[weekNumber - 1].length - 1] || daysInMonth[daysInMonth.length - 1];
+    } else {
+      // Default to the last day of the month if the requested week doesn't exist
+      return daysInMonth[daysInMonth.length - 1];
+    }
+  };
+
   // Updated generateTasks function that only creates tasks for dates in the Working Day Calendar
   const generateTasks = async () => {
     if (!date || !formData.doer || !formData.description || !formData.frequency) {
@@ -489,7 +574,12 @@ export default function AssignTask() {
             
             // Find the next working day closest to the target date
             const nextIndex = findClosestWorkingDayIndex(futureDates, targetDateStr);
-            currentIndex = nextIndex > currentIndex ? nextIndex : futureDates.length;
+            // Only continue if we found a valid next date (not -1) and it's greater than current
+            if (nextIndex !== -1 && nextIndex > currentIndex) {
+              currentIndex = nextIndex;
+            } else {
+              currentIndex = futureDates.length; // Exit the loop
+            }
             break;
           }
           case "fortnightly": {
@@ -500,7 +590,12 @@ export default function AssignTask() {
             const targetDateStr2 = formatDateToDDMMYYYY(targetDate2);
             
             const nextIndex2 = findClosestWorkingDayIndex(futureDates, targetDateStr2);
-            currentIndex = nextIndex2 > currentIndex ? nextIndex2 : futureDates.length;
+            // Only continue if we found a valid next date (not -1) and it's greater than current
+            if (nextIndex2 !== -1 && nextIndex2 > currentIndex) {
+              currentIndex = nextIndex2;
+            } else {
+              currentIndex = futureDates.length; // Exit the loop
+            }
             break;
           }
           case "monthly": {
@@ -511,7 +606,12 @@ export default function AssignTask() {
             const targetDateStr3 = formatDateToDDMMYYYY(targetDate3);
             
             const nextIndex3 = findClosestWorkingDayIndex(futureDates, targetDateStr3);
-            currentIndex = nextIndex3 > currentIndex ? nextIndex3 : futureDates.length;
+            // Only continue if we found a valid next date (not -1) and it's greater than current
+            if (nextIndex3 !== -1 && nextIndex3 > currentIndex) {
+              currentIndex = nextIndex3;
+            } else {
+              currentIndex = futureDates.length; // Exit the loop
+            }
             break;
           }
           case "quarterly": {
@@ -522,7 +622,12 @@ export default function AssignTask() {
             const targetDateStr4 = formatDateToDDMMYYYY(targetDate4);
             
             const nextIndex4 = findClosestWorkingDayIndex(futureDates, targetDateStr4);
-            currentIndex = nextIndex4 > currentIndex ? nextIndex4 : futureDates.length;
+            // Only continue if we found a valid next date (not -1) and it's greater than current
+            if (nextIndex4 !== -1 && nextIndex4 > currentIndex) {
+              currentIndex = nextIndex4;
+            } else {
+              currentIndex = futureDates.length; // Exit the loop
+            }
             break;
           }
           case "yearly": {
@@ -533,7 +638,12 @@ export default function AssignTask() {
             const targetDateStr5 = formatDateToDDMMYYYY(targetDate5);
             
             const nextIndex5 = findClosestWorkingDayIndex(futureDates, targetDateStr5);
-            currentIndex = nextIndex5 > currentIndex ? nextIndex5 : futureDates.length;
+            // Only continue if we found a valid next date (not -1) and it's greater than current
+            if (nextIndex5 !== -1 && nextIndex5 > currentIndex) {
+              currentIndex = nextIndex5;
+            } else {
+              currentIndex = futureDates.length; // Exit the loop
+            }
             break;
           }
           case "end-of-1st-week":
@@ -571,102 +681,6 @@ export default function AssignTask() {
 
     setGeneratedTasks(tasks);
     setAccordionOpen(true);
-  };
-
-  // Helper function to find the closest working day to a target date
-  const findClosestWorkingDayIndex = (workingDays, targetDateStr) => {
-    // Parse the target date
-    const [targetDay, targetMonth, targetYear] = targetDateStr.split('/').map(Number);
-    const targetDate = new Date(targetYear, targetMonth - 1, targetDay);
-    
-    // Find the closest working day (preferably after the target date)
-    let closestIndex = -1;
-    let minDifference = Infinity;
-    
-    for (let i = 0; i < workingDays.length; i++) {
-      const [workingDay, workingMonth, workingYear] = workingDays[i].split('/').map(Number);
-      const currentDate = new Date(workingYear, workingMonth - 1, workingDay);
-      
-      // Calculate difference in days
-      const difference = Math.abs((currentDate - targetDate) / (1000 * 60 * 60 * 24));
-      
-      if (currentDate >= targetDate && difference < minDifference) {
-        minDifference = difference;
-        closestIndex = i;
-      }
-    }
-    
-    // If no working day found after the target date, find the closest one before
-    if (closestIndex === -1) {
-      for (let i = workingDays.length - 1; i >= 0; i--) {
-        const [workingDay2, workingMonth2, workingYear2] = workingDays[i].split('/').map(Number);
-        const currentDate2 = new Date(workingYear2, workingMonth2 - 1, workingDay2);
-        
-        if (currentDate2 < targetDate) {
-          closestIndex = i;
-          break;
-        }
-      }
-    }
-    
-    return closestIndex !== -1 ? closestIndex : workingDays.length - 1;
-  };
-
-  // Helper function to find the date for the end of a specific week in a month
-  const findEndOfWeekDate = (date, weekNumber, workingDays) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    
-    // Get all working days in the target month
-    const daysInMonth = workingDays.filter(dateStr => {
-      const [, m, y] = dateStr.split('/').map(Number);
-      return y === year && m === month + 1;
-    });
-    
-    // Sort them chronologically
-    daysInMonth.sort((a, b) => {
-      const [dayA] = a.split('/').map(Number);
-      const [dayB] = b.split('/').map(Number);
-      return dayA - dayB;
-    });
-    
-    // Group by weeks (assuming Monday is the first day of the week)
-    const weekGroups = [];
-    let currentWeek = [];
-    let lastWeekDay = -1;
-    
-    for (const dateStr of daysInMonth) {
-      const [workingDay2, m, y] = dateStr.split('/').map(Number);
-      const dateObj = new Date(y, m - 1, workingDay2);
-      const weekDay = dateObj.getDay(); // 0 for Sunday, 1 for Monday, etc.
-      
-      if (weekDay <= lastWeekDay || currentWeek.length === 0) {
-        if (currentWeek.length > 0) {
-          weekGroups.push(currentWeek);
-        }
-        currentWeek = [dateStr];
-      } else {
-        currentWeek.push(dateStr);
-      }
-      
-      lastWeekDay = weekDay;
-    }
-    
-    if (currentWeek.length > 0) {
-      weekGroups.push(currentWeek);
-    }
-    
-    // Return the last day of the requested week
-    if (weekNumber === -1) {
-      // Last week of the month
-      return weekGroups[weekGroups.length - 1]?.[weekGroups[weekGroups.length - 1].length - 1] || daysInMonth[daysInMonth.length - 1];
-    } else if (weekNumber > 0 && weekNumber <= weekGroups.length) {
-      // Specific week
-      return weekGroups[weekNumber - 1]?.[weekGroups[weekNumber - 1].length - 1] || daysInMonth[daysInMonth.length - 1];
-    } else {
-      // Default to the last day of the month if the requested week doesn't exist
-      return daysInMonth[daysInMonth.length - 1];
-    }
   };
 
  // Updated handleSubmit function with proper sheet selection logic
