@@ -54,8 +54,8 @@ const CalendarComponent = ({ date, onChange, onClose }) => {
           type="button"
           onClick={() => handleDateClick(day)}
           className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${isSelected
-              ? "bg-purple-600 text-white"
-              : "hover:bg-purple-100 text-gray-700"
+            ? "bg-purple-600 text-white"
+            : "hover:bg-purple-100 text-gray-700"
             }`}
         >
           {day}
@@ -802,6 +802,7 @@ export default function AssignTask() {
               </div>
 
               {/* Given By Dropdown */}
+              {/* Given By - Read Only (replaces the dropdown) */}
               <div className="space-y-2">
                 <label
                   htmlFor="givenBy"
@@ -809,21 +810,16 @@ export default function AssignTask() {
                 >
                   Given By
                 </label>
-                <select
+                <div className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 bg-purple-50 text-purple-700">
+                  {sessionStorage.getItem('userFullName') || "Current User"}
+                </div>
+                <input
+                  type="hidden"
                   id="givenBy"
                   name="givenBy"
-                  value={formData.givenBy}
+                  value={sessionStorage.getItem('userFullName') || ""}
                   onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                >
-                  <option value="">Select Given By</option>
-                  {givenByOptions.map((person, index) => (
-                    <option key={index} value={person}>
-                      {person}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Doer's Name Dropdown */}

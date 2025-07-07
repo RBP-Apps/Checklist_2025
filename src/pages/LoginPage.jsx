@@ -9,7 +9,8 @@ const LoginPage = () => {
   const [isLoginLoading, setIsLoginLoading] = useState(false)
   const [masterData, setMasterData] = useState({
     userCredentials: {}, // Object where keys are usernames and values are passwords
-    userRoles: {} // Object where keys are usernames and values are roles
+    userRoles: {},      // Object where keys are usernames and values are roles
+    userNames: {}       // Object where keys are usernames and values are names (new)
   })
   const [formData, setFormData] = useState({
     username: "",
@@ -20,57 +21,59 @@ const LoginPage = () => {
   // Function to check if a role is any variation of "inactive"
   const isInactiveRole = (role) => {
     if (!role) return false;
-    
+
     // Convert to lowercase
     const normalizedRole = String(role).toLowerCase().trim();
-    
+
     // Check for different variations of "inactive" status
-    return normalizedRole === "inactive" || 
-           normalizedRole === "in active" || 
-           normalizedRole === "inactiv" || 
-           normalizedRole === "in activ";
+    return normalizedRole === "inactive" ||
+      normalizedRole === "in active" ||
+      normalizedRole === "inactiv" ||
+      normalizedRole === "in activ";
   }
 
   // Fetch master data on component mount
   useEffect(() => {
     const fetchMasterData = async () => {
       const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDEgWct4VVx7Oh81zMxwl1UsvretjqrCy9X7XlOoIqy9LXmGAAIlx-6Wvx3dZha0Xr/exec"
-      
+
       try {
         setIsDataLoading(true)
-        
+
         // Get the spreadsheet ID from your Apps Script
         const SPREADSHEET_ID = "1nvU1bQOkLNMwatRSbcTPJd0vhDGeqrhY8gL1s0YWGww"
-        
+
         // Construct the URL to read the sheet data directly
         const sheetUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=master`
-        
+
         const response = await fetch(sheetUrl)
         const text = await response.text()
-        
+
         // Parse the Google Sheets JSON response
         const jsonString = text.substring(47).slice(0, -2) // Remove Google's wrapper
         const data = JSON.parse(jsonString)
-        
-        // Create userCredentials and userRoles objects from the sheet data
+
+        // Create userCredentials, userRoles, and userNames objects from the sheet data
         const userCredentials = {}
         const userRoles = {}
-        
+        const userNames = {}
+
         // Process the data rows (skip header row if it exists)
         if (data.table && data.table.rows) {
           console.log("Raw sheet data:", data.table.rows);
-          
+
           // Start from index 1 to skip header row (adjust if needed)
           for (let i = 1; i < data.table.rows.length; i++) {
             const row = data.table.rows[i]
-            
-            // Extract data from columns C, D, E (indices 2, 3, 4)
+
+            // Extract data from columns B (name), C (username), D (password), E (role)
+            const name = row.c[2] ? String(row.c[2].v || '').trim() : '';
             const username = row.c[2] ? String(row.c[2].v || '').trim().toLowerCase() : '';
             const password = row.c[3] ? String(row.c[3].v || '').trim() : '';
             const role = row.c[4] ? String(row.c[4].v || '').trim() : 'user';
-            
-            console.log(`Processing row ${i}: username=${username}, password=${password}, role=${role}`);
-            
+
+            console.log(`Processing row ${i}: name=${name}, username=${username}, password=${password}, role=${role}`);
+
             // Only process if we have both username and password
             if (username && password && password.trim() !== '') {
               // Check if the role is any kind of inactive status
@@ -78,40 +81,42 @@ const LoginPage = () => {
                 console.log(`Skipping inactive user: ${username} with role: ${role}`);
                 continue; // Skip this user
               }
-              
+
               // Store normalized role for comparison
               const normalizedRole = role.toLowerCase();
-              
+
               // Store in our maps
               userCredentials[username] = password;
               userRoles[username] = normalizedRole;
-              
-              console.log(`Added credential for: ${username}, Role: ${normalizedRole}`);
+              userNames[username] = name;
+
+              console.log(`Added credential for: ${username}, Name: ${name}, Role: ${normalizedRole}`);
             }
           }
         }
-        
-        setMasterData({ userCredentials, userRoles })
+
+        setMasterData({ userCredentials, userRoles, userNames })
         console.log("Loaded credentials from master sheet:", Object.keys(userCredentials).length)
         console.log("Credentials map:", userCredentials)
         console.log("Roles map:", userRoles)
-        
+        console.log("Names map:", userNames)
+
         // Debug - check admin roles specifically
         const adminUsers = Object.entries(userRoles)
           .filter(([, role]) => role === 'admin')
           .map(([username]) => username);
         console.log("Admin users found:", adminUsers);
-        
+
       } catch (error) {
         console.error("Error Fetching Master Data:", error)
-        
+
         // Fallback: Try the alternative method using your Apps Script
         try {
           console.log("Trying alternative method...");
           const fallbackResponse = await fetch(SCRIPT_URL, {
             method: 'GET'
           })
-          
+
           if (fallbackResponse.ok) {
             console.log("Apps Script is accessible, but getMasterData action needs to be implemented");
             showToast("Unable to load user data. Please contact administrator.", "error")
@@ -119,7 +124,7 @@ const LoginPage = () => {
         } catch (fallbackError) {
           console.error("Fallback also failed:", fallbackError);
         }
-        
+
         showToast(`Network error: ${error.message}. Please try again later.`, "error")
       } finally {
         setIsDataLoading(false)
@@ -148,29 +153,34 @@ const LoginPage = () => {
       console.log("Available Credentials Count:", Object.keys(masterData.userCredentials).length)
       console.log("Current userCredentials:", masterData.userCredentials)
       console.log("Current userRoles:", masterData.userRoles)
-      
+      console.log("Current userNames:", masterData.userNames)
+
       // Check if the username exists in our credentials map
       if (trimmedUsername in masterData.userCredentials) {
         const correctPassword = masterData.userCredentials[trimmedUsername]
         const userRole = masterData.userRoles[trimmedUsername]
-        
+        const userName = masterData.userNames[trimmedUsername] || trimmedUsername
+
         console.log("Found user in credentials map")
         console.log("Expected Password:", correctPassword)
         console.log("Password Match:", correctPassword === trimmedPassword)
         console.log("User Role:", userRole)
-        
+        console.log("User Name:", userName)
+
         // Check if password matches
         if (correctPassword === trimmedPassword) {
           // Store user info in sessionStorage
           sessionStorage.setItem('username', trimmedUsername)
-          
+          // sessionStorage.setItem('userName', userName)
+          sessionStorage.setItem('userFullName', userName) // Alternative key if needed
+
           // Check if user is admin - explicitly compare with the string "admin"
           const isAdmin = userRole === "admin";
           console.log(`User ${trimmedUsername} is admin: ${isAdmin}`);
-          
+
           // Set role based on the fetched role
           sessionStorage.setItem('role', isAdmin ? 'admin' : 'user')
-          
+
           // For admin users, we don't want to restrict by department
           if (isAdmin) {
             sessionStorage.setItem('department', 'all') // Admin sees all departments
@@ -181,11 +191,11 @@ const LoginPage = () => {
             sessionStorage.setItem('isAdmin', 'false')
             console.log("USER LOGIN - Setting restricted access");
           }
-          
+
           // Navigate to dashboard
           navigate("/dashboard/admin")
-          
-          showToast(`Login successful. Welcome, ${trimmedUsername}!`, "success")
+
+          showToast(`Login successful. Welcome, ${userName}!`, "success")
           return
         } else {
           showToast("Username or password is incorrect. Please try again.", "error")
@@ -193,13 +203,14 @@ const LoginPage = () => {
       } else {
         showToast("Username or password is incorrect. Please try again.", "error")
       }
-      
+
       // If we got here, login failed
       console.error("Login Failed", {
         usernameExists: trimmedUsername in masterData.userCredentials,
-        passwordMatch: (trimmedUsername in masterData.userCredentials) ? 
+        passwordMatch: (trimmedUsername in masterData.userCredentials) ?
           "Password did not match" : 'Username not found',
-        userRole: masterData.userRoles[trimmedUsername] || 'No role'
+        userRole: masterData.userRoles[trimmedUsername] || 'No role',
+        userName: masterData.userNames[trimmedUsername] || 'No name'
       })
     } catch (error) {
       console.error("Login Error:", error)
@@ -286,11 +297,10 @@ const LoginPage = () => {
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
-          toast.type === "success"
+        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${toast.type === "success"
             ? "bg-green-100 text-green-800 border-l-4 border-green-500"
             : "bg-red-100 text-red-800 border-l-4 border-red-500"
-        }`}>
+          }`}>
           {toast.message}
         </div>
       )}
