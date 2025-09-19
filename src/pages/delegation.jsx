@@ -250,51 +250,64 @@ function DelegationDataPage() {
   }, [accountData, debouncedSearchTerm, sortDateWise])
 
   // Updated history filtering with user filter based on column H
-  const filteredHistoryData = useMemo(() => {
-    return historyData
-      .filter((item) => {
-        // User filter: For non-admin users, check column H (col7) matches username
-        const userMatch =
-          userRole === "admin" || (item["col7"] && item["col7"].toLowerCase() === username.toLowerCase())
+const filteredHistoryData = useMemo(() => {
+  console.log("History Debug - Total history data:", historyData.length);
+  console.log("History Debug - Username for filtering:", username);
+  
+  return historyData
+    .filter((item) => {
+      // Debug correct column
+      console.log("History Row - Column J (Given By):", item["col9"], "Username:", username);
+      
+      // CORRECTED: Check column J (col9) with proper case handling
+      const givenByValue = (item["col9"] || "").toString().trim()
+      const currentUsernameClean = (username || "").toString().trim()
+      const userMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
+      
+      console.log(`Comparing: "${givenByValue.toLowerCase()}" === "${currentUsernameClean.toLowerCase()}" = ${userMatch}`);
 
-        if (!userMatch) return false
+      if (!userMatch) return false
 
-        const matchesSearch = debouncedSearchTerm
-          ? Object.values(item).some(
-            (value) => value && value.toString().toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
-          )
-          : true
+      // Rest of filtering logic...
+      const matchesSearch = debouncedSearchTerm
+        ? Object.values(item).some(
+          (value) => value && value.toString().toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
+        )
+        : true
 
-        let matchesDateRange = true
-        if (startDate || endDate) {
-          const itemDate = parseDateFromDDMMYYYY(item["col0"])
-          if (!itemDate) return false
+      let matchesDateRange = true
+      if (startDate || endDate) {
+        const itemDate = parseDateFromDDMMYYYY(item["col0"])
+        if (!itemDate) return false
 
-          if (startDate) {
-            const startDateObj = new Date(startDate)
-            startDateObj.setHours(0, 0, 0, 0)
-            if (itemDate < startDateObj) matchesDateRange = false
-          }
-
-          if (endDate) {
-            const endDateObj = new Date(endDate)
-            endDateObj.setHours(23, 59, 59, 999)
-            if (itemDate > endDateObj) matchesDateRange = false
-          }
+        if (startDate) {
+          const startDateObj = new Date(startDate)
+          startDateObj.setHours(0, 0, 0, 0)
+          if (itemDate < startDateObj) matchesDateRange = false
         }
 
-        return matchesSearch && matchesDateRange
-      })
-      .sort((a, b) => {
-        const dateStrA = a["col0"] || ""
-        const dateStrB = b["col0"] || ""
-        const dateA = parseDateFromDDMMYYYY(dateStrA)
-        const dateB = parseDateFromDDMMYYYY(dateStrB)
-        if (!dateA) return 1
-        if (!dateB) return -1
-        return dateB.getTime() - dateA.getTime()
-      })
-  }, [historyData, debouncedSearchTerm, startDate, endDate, parseDateFromDDMMYYYY, userRole, username])
+        if (endDate) {
+          const endDateObj = new Date(endDate)
+          endDateObj.setHours(23, 59, 59, 999)
+          if (itemDate > endDateObj) matchesDateRange = false
+        }
+      }
+
+      return matchesSearch && matchesDateRange
+    })
+    .sort((a, b) => {
+      const dateStrA = a["col0"] || ""
+      const dateStrB = b["col0"] || ""
+      const dateA = parseDateFromDDMMYYYY(dateStrA)
+      const dateB = parseDateFromDDMMYYYY(dateStrB)
+      if (!dateA) return 1
+      if (!dateB) return -1
+      return dateB.getTime() - dateA.getTime()
+    })
+}, [historyData, debouncedSearchTerm, startDate, endDate, parseDateFromDDMMYYYY, username])
+console.log("Filtered History Count:", filteredHistoryData.length);
+
+
 
   // Optimized data fetching with parallel requests
   const fetchSheetData = useCallback(async () => {
@@ -381,6 +394,7 @@ function DelegationDataPage() {
       setHistoryData(processedHistoryData)
 
       // Process main delegation data - REMOVED DATE FILTERING
+      // Process main delegation data - UPDATED with admin user filtering
       const currentUsername = sessionStorage.getItem("username")
       const currentUserRole = sessionStorage.getItem("role")
 
@@ -404,6 +418,19 @@ function DelegationDataPage() {
         } else if (Array.isArray(row)) {
           rowValues = row
         } else {
+          return
+        }
+
+        // UPDATED: Filter for ALL users (including admin) - show only their assigned tasks
+        // Show tasks where Column D (Given By) matches the logged-in user's username
+        const givenByValue = (rowValues[3] || "").toString().trim()
+        const currentUsernameClean = (currentUsername || "").toString().trim()
+        
+        console.log(`Comparing: "${givenByValue.toLowerCase()}" === "${currentUsernameClean.toLowerCase()}"`);
+        
+        const isGivenByMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
+        if (!isGivenByMatch) {
+          console.log(`Filtering out row ${rowIndex} - Given By: "${givenByValue}" doesn't match Username: "${currentUsernameClean}"`);
           return
         }
 
