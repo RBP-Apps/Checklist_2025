@@ -60,10 +60,10 @@ function DelegationDataPage() {
   const [endDate, setEndDate] = useState("")
   const [userRole, setUserRole] = useState("")
   const [username, setUsername] = useState("")
-
+const [mergedTableData, setMergedTableData] = useState([])
   // Debounced search term for better performance
   const debouncedSearchTerm = useDebounce(searchTerm, 300)
-
+const [statusFilter, setStatusFilter] = useState("all")
   const formatDateToDDMMYYYY = useCallback((date) => {
     const day = date.getDate().toString().padStart(2, "0")
     const month = (date.getMonth() + 1).toString().padStart(2, "0")
@@ -95,6 +95,75 @@ function DelegationDataPage() {
       googleSheetsValue: `=DATE(${year},${month},${day})`
     }
   }, [])
+
+
+const createMergedTableData = useCallback(() => {
+  if (!Array.isArray(accountData) || !Array.isArray(historyData)) {
+    return []
+  }
+
+  try {
+    const currentUsername = sessionStorage.getItem("username")
+    const currentUsernameClean = (currentUsername || "").toString().trim()
+
+    // Format pending data
+    const pendingData = accountData.map(item => ({
+      ...item,
+      status: 'Pending',
+      isDisabled: false
+    }))
+
+    // Format history data to match pending structure with user filtering
+    const completeData = historyData
+      .filter(item => {
+        const userValue = (item["col7"] || "").toString().trim() // Column H - User
+        const givenByValue = (item["col9"] || "").toString().trim() // Column J - Given By
+        
+        const userMatch = userValue.toLowerCase() === currentUsernameClean.toLowerCase()
+        const givenByMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
+        
+        return userMatch || givenByMatch
+      })
+      .map(item => ({
+        _id: `history_${item._id}`,
+        _rowIndex: item._rowIndex,
+        _taskId: item["col1"],
+        col0: item["col0"], // Timestamp from history
+        col1: item["col1"], // Task ID
+        col2: "", // Department (not in history)
+        col3: item["col9"], // Given By from history
+        col4: item["col7"], // User from history
+        col5: item["col8"], // Task description from history
+        col6: "", // Task Start Date (not in history)
+        col10: item["col3"], // Next Target Date from history
+        col17: "", // Color code (not in history)
+        status: 'Complete',
+        isDisabled: true,
+        // Add history-specific fields
+        historyStatus: item["col2"], // Done/Extend date
+        historyRemarks: item["col4"],
+        historyImage: item["col5"]
+      }))
+
+    // Combine the data
+    return [...pendingData, ...completeData]
+  } catch (error) {
+    console.error("Error in createMergedTableData:", error)
+    return accountData
+  }
+}, [accountData, historyData])
+// STEP 3: useEffect को इससे replace करें:
+
+
+useEffect(() => {
+  if (accountData.length > 0 || historyData.length > 0) {
+    const merged = createMergedTableData()
+    setMergedTableData(merged)
+  }
+}, [createMergedTableData, accountData.length, historyData.length])
+
+
+
 
   // NEW: Function to convert DD/MM/YYYY string to Google Sheets date format
   const convertToGoogleSheetsDate = useCallback((dateString) => {
@@ -236,37 +305,51 @@ function DelegationDataPage() {
     }
   }, [])
 
-  // Optimized filtered data with debounced search
-  const filteredAccountData = useMemo(() => {
-    const filtered = debouncedSearchTerm
-      ? accountData.filter((account) =>
-        Object.values(account).some(
-          (value) => value && value.toString().toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
-        ),
-      )
-      : accountData
+const filteredAccountData = useMemo(() => {
+  let filtered = accountData // Direct use accountData instead of mergedTableData
 
-    return filtered.sort(sortDateWise)
-  }, [accountData, debouncedSearchTerm, sortDateWise])
+  // Apply status filter
+  if (statusFilter !== "all") {
+    filtered = filtered.filter(item => 
+      statusFilter === "pending" ? item.status === "Pending" : item.status === "Complete"
+    )
+  }
+
+  // Apply search filter
+  if (debouncedSearchTerm) {
+    filtered = filtered.filter((account) =>
+      Object.values(account).some(
+        (value) => value && value.toString().toLowerCase().includes(debouncedSearchTerm.toLowerCase()),
+      ),
+    )
+  }
+
+  return filtered.sort(sortDateWise)
+}, [accountData, statusFilter, debouncedSearchTerm, sortDateWise])
 
   // Updated history filtering with user filter based on column H
+// Updated history filtering with user filter based on column H and Column J
 const filteredHistoryData = useMemo(() => {
   console.log("History Debug - Total history data:", historyData.length);
   console.log("History Debug - Username for filtering:", username);
   
   return historyData
     .filter((item) => {
-      // Debug correct column
-      console.log("History Row - Column J (Given By):", item["col9"], "Username:", username);
-      
-      // CORRECTED: Check column J (col9) with proper case handling
-      const givenByValue = (item["col9"] || "").toString().trim()
+      // Check both Column H (User) and Column J (Given By) 
+      const userValue = (item["col7"] || "").toString().trim() // Column H - User
+      const givenByValue = (item["col9"] || "").toString().trim() // Column J - Given By
       const currentUsernameClean = (username || "").toString().trim()
-      const userMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
       
-      console.log(`Comparing: "${givenByValue.toLowerCase()}" === "${currentUsernameClean.toLowerCase()}" = ${userMatch}`);
-
-      if (!userMatch) return false
+      const userMatch = userValue.toLowerCase() === currentUsernameClean.toLowerCase()
+      const givenByMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
+      
+      console.log(`User Column H: "${userValue}" === "${currentUsernameClean}" = ${userMatch}`);
+      console.log(`Given By Column J: "${givenByValue}" === "${currentUsernameClean}" = ${givenByMatch}`);
+      
+      // Show if either User column or Given By column matches current username
+      const shouldShow = userMatch || givenByMatch
+      
+      if (!shouldShow) return false
 
       // Rest of filtering logic...
       const matchesSearch = debouncedSearchTerm
@@ -308,181 +391,209 @@ const filteredHistoryData = useMemo(() => {
 console.log("Filtered History Count:", filteredHistoryData.length);
 
 
+ const fetchSheetData = useCallback(async () => {
+  try {
+    setLoading(true)
+    setError(null)
 
-  // Optimized data fetching with parallel requests
-  const fetchSheetData = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+    // Parallel fetch both sheets for better performance
+    const [mainResponse, historyResponse] = await Promise.all([
+      fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${CONFIG.SOURCE_SHEET_NAME}&action=fetch`),
+      fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${CONFIG.TARGET_SHEET_NAME}&action=fetch`).catch(() => null),
+    ])
 
-      // Parallel fetch both sheets for better performance
-      const [mainResponse, historyResponse] = await Promise.all([
-        fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${CONFIG.SOURCE_SHEET_NAME}&action=fetch`),
-        fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${CONFIG.TARGET_SHEET_NAME}&action=fetch`).catch(() => null),
-      ])
-
-      if (!mainResponse.ok) {
-        throw new Error(`Failed to fetch data: ${mainResponse.status}`)
-      }
-
-      // Process main data
-      const mainText = await mainResponse.text()
-      let data
-      try {
-        data = JSON.parse(mainText)
-      } catch (parseError) {
-        const jsonStart = mainText.indexOf("{")
-        const jsonEnd = mainText.lastIndexOf("}")
-        if (jsonStart !== -1 && jsonEnd !== -1) {
-          const jsonString = mainText.substring(jsonStart, jsonEnd + 1)
-          data = JSON.parse(jsonString)
-        } else {
-          throw new Error("Invalid JSON response from server")
-        }
-      }
-
-      // Process history data if available
-      let processedHistoryData = []
-      if (historyResponse && historyResponse.ok) {
-        try {
-          const historyText = await historyResponse.text()
-          let historyData
-          try {
-            historyData = JSON.parse(historyText)
-          } catch (parseError) {
-            const jsonStart = historyText.indexOf("{")
-            const jsonEnd = historyText.lastIndexOf("}")
-            if (jsonStart !== -1 && jsonEnd !== -1) {
-              const jsonString = historyText.substring(jsonStart, jsonEnd + 1)
-              historyData = JSON.parse(jsonString)
-            }
-          }
-
-          if (historyData && historyData.table && historyData.table.rows) {
-            processedHistoryData = historyData.table.rows
-              .map((row, rowIndex) => {
-                if (rowIndex === 0) return null
-
-                const rowData = {
-                  _id: Math.random().toString(36).substring(2, 15),
-                  _rowIndex: rowIndex + 2,
-                }
-
-                const rowValues = row.c ? row.c.map((cell) => (cell && cell.v !== undefined ? cell.v : "")) : []
-
-                // Map all columns including column H (col7) for user filtering and column I (col8) for Task
-                rowData["col0"] = rowValues[0] ? parseGoogleSheetsDate(String(rowValues[0])) : ""
-                rowData["col1"] = rowValues[1] || ""
-                rowData["col2"] = rowValues[2] || ""
-                rowData["col3"] = rowValues[3] || ""
-                rowData["col4"] = rowValues[4] || ""
-                rowData["col5"] = rowValues[5] || ""
-                rowData["col6"] = rowValues[6] || ""
-                rowData["col7"] = rowValues[7] || "" // Column H - User name
-                rowData["col8"] = rowValues[8] || "" // Column I - Task
-                rowData["col9"] = rowValues[9] || "" // Column J - Given By
-
-                return rowData
-              })
-              .filter((row) => row !== null)
-          }
-        } catch (historyError) {
-          console.error("Error processing history data:", historyError)
-        }
-      }
-
-      setHistoryData(processedHistoryData)
-
-      // Process main delegation data - REMOVED DATE FILTERING
-      // Process main delegation data - UPDATED with admin user filtering
-      const currentUsername = sessionStorage.getItem("username")
-      const currentUserRole = sessionStorage.getItem("role")
-
-      const pendingAccounts = []
-
-      let rows = []
-      if (data.table && data.table.rows) {
-        rows = data.table.rows
-      } else if (Array.isArray(data)) {
-        rows = data
-      } else if (data.values) {
-        rows = data.values.map((row) => ({ c: row.map((val) => ({ v: val })) }))
-      }
-
-      rows.forEach((row, rowIndex) => {
-        if (rowIndex === 0) return // Skip header row
-
-        let rowValues = []
-        if (row.c) {
-          rowValues = row.c.map((cell) => (cell && cell.v !== undefined ? cell.v : ""))
-        } else if (Array.isArray(row)) {
-          rowValues = row
-        } else {
-          return
-        }
-
-        // UPDATED: Filter for ALL users (including admin) - show only their assigned tasks
-        // Show tasks where Column D (Given By) matches the logged-in user's username
-        const givenByValue = (rowValues[3] || "").toString().trim()
-        const currentUsernameClean = (currentUsername || "").toString().trim()
-        
-        console.log(`Comparing: "${givenByValue.toLowerCase()}" === "${currentUsernameClean.toLowerCase()}"`);
-        
-        const isGivenByMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
-        if (!isGivenByMatch) {
-          console.log(`Filtering out row ${rowIndex} - Given By: "${givenByValue}" doesn't match Username: "${currentUsernameClean}"`);
-          return
-        }
-
-        const assignedTo = rowValues[4] || "Unassigned"
-        const isUserMatch = currentUserRole === "admin" || assignedTo.toLowerCase() === currentUsername.toLowerCase()
-        if (!isUserMatch && currentUserRole !== "admin") return
-
-        // Check conditions: Column K not null and Column L null
-        const columnKValue = rowValues[10]
-        const columnLValue = rowValues[11]
-
-        const hasColumnK = !isEmpty(columnKValue)
-        const isColumnLEmpty = isEmpty(columnLValue)
-
-        if (!hasColumnK || !isColumnLEmpty) {
-          return
-        }
-
-        // REMOVED DATE FILTERING - Show all data regardless of date
-
-        const googleSheetsRowIndex = rowIndex + 1
-        const taskId = rowValues[1] || ""
-        const stableId = taskId
-          ? `task_${taskId}_${googleSheetsRowIndex}`
-          : `row_${googleSheetsRowIndex}_${Math.random().toString(36).substring(2, 15)}`
-
-        const rowData = {
-          _id: stableId,
-          _rowIndex: googleSheetsRowIndex,
-          _taskId: taskId,
-        }
-
-        // Map all columns
-        for (let i = 0; i < 18; i++) {
-          if (i === 0 || i === 6 || i === 10) {
-            rowData[`col${i}`] = rowValues[i] ? parseGoogleSheetsDate(String(rowValues[i])) : ""
-          } else {
-            rowData[`col${i}`] = rowValues[i] || ""
-          }
-        }
-
-        pendingAccounts.push(rowData)
-      })
-
-      setAccountData(pendingAccounts)
-      setLoading(false)
-    } catch (error) {
-      console.error("Error fetching sheet data:", error)
-      setError("Failed to load account data: " + error.message)
-      setLoading(false)
+    if (!mainResponse.ok) {
+      throw new Error(`Failed to fetch data: ${mainResponse.status}`)
     }
-  }, [formatDateToDDMMYYYY, parseGoogleSheetsDate, parseDateFromDDMMYYYY, isEmpty])
+
+    // Process main data
+    const mainText = await mainResponse.text()
+    let data
+    try {
+      data = JSON.parse(mainText)
+    } catch (parseError) {
+      const jsonStart = mainText.indexOf("{")
+      const jsonEnd = mainText.lastIndexOf("}")
+      if (jsonStart !== -1 && jsonEnd !== -1) {
+        const jsonString = mainText.substring(jsonStart, jsonEnd + 1)
+        data = JSON.parse(jsonString)
+      } else {
+        throw new Error("Invalid JSON response from server")
+      }
+    }
+
+    // Process history data if available
+    let processedHistoryData = []
+    if (historyResponse && historyResponse.ok) {
+      try {
+        const historyText = await historyResponse.text()
+        let historyData
+        try {
+          historyData = JSON.parse(historyText)
+        } catch (parseError) {
+          const jsonStart = historyText.indexOf("{")
+          const jsonEnd = historyText.lastIndexOf("}")
+          if (jsonStart !== -1 && jsonEnd !== -1) {
+            const jsonString = historyText.substring(jsonStart, jsonEnd + 1)
+            historyData = JSON.parse(jsonString)
+          }
+        }
+
+        if (historyData && historyData.table && historyData.table.rows) {
+          processedHistoryData = historyData.table.rows
+            .map((row, rowIndex) => {
+              if (rowIndex === 0) return null
+
+              const rowData = {
+                _id: Math.random().toString(36).substring(2, 15),
+                _rowIndex: rowIndex + 2,
+              }
+
+              const rowValues = row.c ? row.c.map((cell) => (cell && cell.v !== undefined ? cell.v : "")) : []
+
+              // Map all columns including column H (col7) for user filtering and column I (col8) for Task
+              rowData["col0"] = rowValues[0] ? parseGoogleSheetsDate(String(rowValues[0])) : ""
+              rowData["col1"] = rowValues[1] || ""
+              rowData["col2"] = rowValues[2] || ""
+              rowData["col3"] = rowValues[3] || ""
+              rowData["col4"] = rowValues[4] || ""
+              rowData["col5"] = rowValues[5] || ""
+              rowData["col6"] = rowValues[6] || ""
+              rowData["col7"] = rowValues[7] || "" // Column H - User name
+              rowData["col8"] = rowValues[8] || "" // Column I - Task
+              rowData["col9"] = rowValues[9] || "" // Column J - Given By
+
+              return rowData
+            })
+            .filter((row) => row !== null)
+        }
+      } catch (historyError) {
+        console.error("Error processing history data:", historyError)
+      }
+    }
+
+    setHistoryData(processedHistoryData)
+
+    // Process main delegation data
+    const currentUsername = sessionStorage.getItem("username")
+    const currentUserRole = sessionStorage.getItem("role")
+    const pendingAccounts = []
+
+    let rows = []
+    if (data.table && data.table.rows) {
+      rows = data.table.rows
+    } else if (Array.isArray(data)) {
+      rows = data
+    } else if (data.values) {
+      rows = data.values.map((row) => ({ c: row.map((val) => ({ v: val })) }))
+    }
+
+    rows.forEach((row, rowIndex) => {
+      if (rowIndex === 0) return // Skip header row
+
+      let rowValues = []
+      if (row.c) {
+        rowValues = row.c.map((cell) => (cell && cell.v !== undefined ? cell.v : ""))
+      } else if (Array.isArray(row)) {
+        rowValues = row
+      } else {
+        return
+      }
+
+      // Column K (index 10) and Column L (index 11) values from DELEGATION sheet
+      const columnKValue = rowValues[10] // Column K
+      const columnLValue = rowValues[11] // Column L
+
+      console.log(`Row ${rowIndex + 1} Debug:`, {
+        taskId: rowValues[1],
+        columnKValue: columnKValue,
+        columnLValue: columnLValue,
+        hasColumnK: !isEmpty(columnKValue),
+        hasColumnL: !isEmpty(columnLValue)
+      });
+
+      // Check Column K - must have value to proceed
+      const hasColumnK = !isEmpty(columnKValue)
+      
+      if (!hasColumnK) {
+        console.log(`Skipping row ${rowIndex + 1} - Column K is empty`);
+        return
+      }
+
+      // Check Column L to determine task status
+      const hasColumnL = !isEmpty(columnLValue)
+      
+      // Task status based on Column K and L conditions:
+      // Column K not null + Column L null = Pending
+      // Column K not null + Column L not null = Complete
+      const taskStatus = hasColumnL ? 'Complete' : 'Pending'
+      const isCompleted = hasColumnL
+
+      // User filtering - All users (including admin) see only their assigned tasks
+      // Check Column D (Given By) and Column E (Name)
+      const givenByValue = (rowValues[3] || "").toString().trim() // Column D - Given By
+      const nameValue = (rowValues[4] || "").toString().trim() // Column E - Name
+      const currentUsernameClean = (currentUsername || "").toString().trim()
+
+      const isGivenByMatch = givenByValue.toLowerCase() === currentUsernameClean.toLowerCase()
+      const isNameMatch = nameValue.toLowerCase() === currentUsernameClean.toLowerCase()
+      const isUserMatch = isGivenByMatch || isNameMatch
+
+      if (!isUserMatch) return
+
+      console.log(`Task ${rowValues[1]} Status: ${taskStatus}`, {
+        taskId: rowValues[1],
+        givenBy: givenByValue,
+        name: nameValue,
+        username: currentUsernameClean,
+        userRole: currentUserRole,
+        userMatch: isUserMatch,
+        columnK: columnKValue,
+        columnL: columnLValue,
+        status: taskStatus
+      });
+
+      const googleSheetsRowIndex = rowIndex + 1
+      const taskId = rowValues[1] || ""
+      const stableId = taskId
+        ? `task_${taskId}_${googleSheetsRowIndex}`
+        : `row_${googleSheetsRowIndex}_${Math.random().toString(36).substring(2, 15)}`
+
+      const rowData = {
+        _id: stableId,
+        _rowIndex: googleSheetsRowIndex,
+        _taskId: taskId,
+        status: taskStatus,
+        isDisabled: isCompleted, // Completed tasks are disabled
+      }
+
+      // Map all columns
+      for (let i = 0; i < 18; i++) {
+        if (i === 0 || i === 6 || i === 10) {
+          rowData[`col${i}`] = rowValues[i] ? parseGoogleSheetsDate(String(rowValues[i])) : ""
+        } else {
+          rowData[`col${i}`] = rowValues[i] || ""
+        }
+      }
+
+      // Add completion data if task is completed
+      if (isCompleted) {
+        rowData.completionData = columnLValue
+        rowData.completedDate = rowValues[11] ? parseGoogleSheetsDate(String(rowValues[11])) : ""
+      }
+
+      pendingAccounts.push(rowData)
+    })
+
+    setAccountData(pendingAccounts)
+    setLoading(false)
+  } catch (error) {
+    console.error("Error fetching sheet data:", error)
+    setError("Failed to load account data: " + error.message)
+    setLoading(false)
+  }
+}, [formatDateToDDMMYYYY, parseGoogleSheetsDate, parseDateFromDDMMYYYY, isEmpty])
+
 
   useEffect(() => {
     fetchSheetData()
@@ -531,32 +642,30 @@ console.log("Filtered History Count:", filteredHistoryData.length);
     },
     [handleSelectItem],
   )
+const handleSelectAllItems = useCallback(
+  (e) => {
+    e.stopPropagation()
+    const checked = e.target.checked
 
-  const handleSelectAllItems = useCallback(
-    (e) => {
-      e.stopPropagation()
-      const checked = e.target.checked
+    if (checked) {
+      const enabledIds = filteredAccountData.filter(item => !item.isDisabled).map((item) => item._id)
+      setSelectedItems(new Set(enabledIds))
 
-      if (checked) {
-        const allIds = filteredAccountData.map((item) => item._id)
-        setSelectedItems(new Set(allIds))
-
-        const newStatusData = {}
-        allIds.forEach((id) => {
-          newStatusData[id] = "Done"
-        })
-        setStatusData((prev) => ({ ...prev, ...newStatusData }))
-      } else {
-        setSelectedItems(new Set())
-        setAdditionalData({})
-        setRemarksData({})
-        setStatusData({})
-        setNextTargetDate({})
-      }
-    },
-    [filteredAccountData],
-  )
-
+      const newStatusData = {}
+      enabledIds.forEach((id) => {
+        newStatusData[id] = "Done"
+      })
+      setStatusData((prev) => ({ ...prev, ...newStatusData }))
+    } else {
+      setSelectedItems(new Set())
+      setAdditionalData({})
+      setRemarksData({})
+      setStatusData({})
+      setNextTargetDate({})
+    }
+  },
+  [filteredAccountData],
+)
   const handleImageUpload = useCallback(async (id, e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -811,6 +920,8 @@ console.log("Filtered History Count:", filteredHistoryData.length);
 
         <div className="bg-white border-b border-gray-200 shadow-sm">
   <div className="px-4 py-4 sm:px-6 lg:px-8">
+
+
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
       <h1 className="text-2xl font-bold tracking-tight text-purple-700">
         {showHistory ? CONFIG.PAGE_CONFIG.historyTitle : CONFIG.PAGE_CONFIG.title}
@@ -875,18 +986,37 @@ console.log("Filtered History Count:", filteredHistoryData.length);
           )}
 
           <div className="rounded-lg border border-purple-200 shadow-md bg-white overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
-              <h2 className="text-purple-700 font-medium">
-                {showHistory
-                  ? `Completed ${CONFIG.SOURCE_SHEET_NAME} Tasks`
-                  : `Pending ${CONFIG.SOURCE_SHEET_NAME} Tasks`}
-              </h2>
-              <p className="text-purple-600 text-sm">
-                {showHistory
-                  ? `${CONFIG.PAGE_CONFIG.historyDescription} for ${userRole === "admin" ? "all" : "your"} tasks`
-                  : CONFIG.PAGE_CONFIG.description}
-              </p>
-            </div>
+           <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 className="text-purple-700 font-medium">
+        {showHistory
+          ? `Completed ${CONFIG.SOURCE_SHEET_NAME} Tasks`
+          : `Pending ${CONFIG.SOURCE_SHEET_NAME} Tasks`}
+      </h2>
+      <p className="text-purple-600 text-sm">
+        {showHistory
+          ? `${CONFIG.PAGE_CONFIG.historyDescription} for ${userRole === "admin" ? "all" : "your"} tasks`
+          : CONFIG.PAGE_CONFIG.description}
+      </p>
+    </div>
+    
+    {!showHistory && (
+      <div className="flex items-center gap-2">
+        <label className="text-sm font-medium text-purple-700">Filter:</label>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="py-1 px-3 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white text-sm"
+        >
+          <option value="all">All Tasks</option>
+          <option value="pending">Pending Only</option>
+          <option value="complete">Complete Only</option>
+        </select>
+      </div>
+    )}
+  </div>
+</div>
 
             {loading ? (
               <div className="text-center py-10">
@@ -1071,227 +1201,266 @@ console.log("Filtered History Count:", filteredHistoryData.length);
               /* Regular Tasks Table */
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                          checked={filteredAccountData.length > 0 && selectedItems.size === filteredAccountData.length}
-                          onChange={handleSelectAllItems}
-                        />
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Given By
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task Description
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-yellow-50" : ""
-                          }`}
-                      >
-                        Task Start Date
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-green-50" : ""
-                          }`}
-                      >
-                        Planned Date
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-blue-50" : ""
-                          }`}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-indigo-50" : ""
-                          }`}
-                      >
-                        Next Target Date
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-purple-50" : ""
-                          }`}
-                      >
-                        Remarks
-                      </th>
-                      <th
-                        className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${!accountData["col17"] ? "bg-orange-50" : ""
-                          }`}
-                      >
-                        Upload Image
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredAccountData.length > 0 ? (
-                      filteredAccountData.map((account) => {
-                        const isSelected = selectedItems.has(account._id)
-                        const rowColorClass = getRowColor(account["col17"])
-                        return (
-                          <tr
-                            key={account._id}
-                            className={`${isSelected ? "bg-purple-50" : ""} hover:bg-gray-50 ${rowColorClass}`}
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                                checked={isSelected}
-                                onChange={(e) => handleCheckboxClick(e, account._id)}
-                              />
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{account["col1"] || "—"}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{account["col2"] || "—"}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{account["col3"] || "—"}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{account["col4"] || "—"}</div>
-                            </td>
-                            <td className="px-6 py-4 min-w-[250px]">
-                              <div
-                                className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
-                                title={account["col5"]}
-                              >
-                                {account["col5"] || "—"}
-                              </div>
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-yellow-50" : ""}`}>
-                              <div className="text-sm text-gray-900">{formatDateForDisplay(account["col6"])}</div>
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-green-50" : ""}`}>
-                              <div className="text-sm text-gray-900">{formatDateForDisplay(account["col10"])}</div>
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-blue-50" : ""}`}>
-                              <select
-                                disabled={!isSelected}
-                                value={statusData[account._id] || ""}
-                                onChange={(e) => handleStatusChange(account._id, e.target.value)}
-                                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              >
-                                <option value="">Select</option>
-                                <option value="Done">Done</option>
-                                <option value="Extend date">Extend date</option>
-                              </select>
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-indigo-50" : ""}`}>
-                              <input
-                                type="date"
-                                disabled={!isSelected || statusData[account._id] !== "Extend date"}
-                                value={
-                                  nextTargetDate[account._id]
-                                    ? (() => {
-                                      const dateStr = nextTargetDate[account._id]
-                                      if (dateStr && dateStr.includes("/")) {
-                                        const [day, month, year] = dateStr.split("/")
-                                        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
-                                      }
-                                      return dateStr
-                                    })()
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  const inputDate = e.target.value
-                                  if (inputDate) {
-                                    const [year, month, day] = inputDate.split("-")
-                                    const formattedDate = `${day}/${month}/${year}`
-                                    handleNextTargetDateChange(account._id, formattedDate)
-                                  } else {
-                                    handleNextTargetDateChange(account._id, "")
-                                  }
-                                }}
-                                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-purple-50" : ""}`}>
-                              <input
-                                type="text"
-                                placeholder="Enter remarks"
-                                disabled={!isSelected}
-                                value={remarksData[account._id] || ""}
-                                onChange={(e) => setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))}
-                                className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              />
-                            </td>
-                            <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-orange-50" : ""}`}>
-                              {account.image ? (
-                                <div className="flex items-center">
-                                  <img
-                                    src={
-                                      typeof account.image === "string"
-                                        ? account.image
-                                        : URL.createObjectURL(account.image)
-                                    }
-                                    alt="Receipt"
-                                    className="h-10 w-10 object-cover rounded-md mr-2"
-                                  />
-                                  <div className="flex flex-col">
-                                    <span className="text-xs text-gray-500">
-                                      {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
-                                    </span>
-                                    {account.image instanceof File ? (
-                                      <span className="text-xs text-green-600">Ready to upload</span>
-                                    ) : (
-                                      <button
-                                        className="text-xs text-purple-600 hover:text-purple-800"
-                                        onClick={() => window.open(account.image, "_blank")}
-                                      >
-                                        View Full Image
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <label
-                                  className={`flex items-center cursor-pointer ${account["col9"]?.toUpperCase() === "YES"
-                                    ? "text-red-600 font-medium"
-                                    : "text-purple-600"
-                                    } hover:text-purple-800`}
-                                >
-                                  <Upload className="h-4 w-4 mr-1" />
-                                  <span className="text-xs">
-                                    {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Image"}
-                                    {account["col9"]?.toUpperCase() === "YES" && (
-                                      <span className="text-red-500 ml-1">*</span>
-                                    )}
-                                  </span>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(account._id, e)}
-                                    disabled={!isSelected}
-                                  />
-                                </label>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan={12} className="px-6 py-4 text-center text-gray-500">
-                          {searchTerm ? "No tasks matching your search" : "No pending tasks found"}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                 <thead className="bg-gray-50">
+  <tr>
+   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+  <input
+    type="checkbox"
+    className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+    checked={filteredAccountData.length > 0 && 
+             selectedItems.size === filteredAccountData.length}
+    onChange={handleSelectAllItems}
+  />
+</th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Task ID
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Status
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Department
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Given By
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Name
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Task Description
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Task Start Date
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Planned Date
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Action Status
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Next Target Date
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Remarks
+    </th>
+    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Upload Image
+    </th>
+  </tr>
+</thead>
+
+<tbody className="bg-white divide-y divide-gray-200">
+  {filteredAccountData.length > 0 ? (
+    filteredAccountData.map((account) => {
+      const isSelected = selectedItems.has(account._id)
+      const rowColorClass = getRowColor(account["col17"])
+      const isDisabled = account.isDisabled
+      const isComplete = account.status === "Complete"
+      
+      return (
+        <tr
+          key={account._id}
+          className={`${isSelected ? "bg-purple-50" : ""} hover:bg-gray-50 ${rowColorClass} ${
+            isDisabled ? "opacity-70 bg-gray-50" : ""
+          }`}
+        >
+          <td className="px-6 py-4 whitespace-nowrap">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              checked={isSelected}
+              disabled={isDisabled}
+              onChange={(e) => handleCheckboxClick(e, account._id)}
+            />
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{account["col1"] || "—"}</div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <span
+              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                isComplete
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+              }`}
+            >
+              {account.status}
+            </span>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{account["col2"] || "—"}</div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{account["col3"] || "—"}</div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{account["col4"] || "—"}</div>
+          </td>
+          <td className="px-6 py-4 min-w-[250px]">
+            <div
+              className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
+              title={account["col5"]}
+            >
+              {account["col5"] || "—"}
+            </div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{formatDateForDisplay(account["col6"])}</div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            <div className="text-sm text-gray-900">{formatDateForDisplay(account["col10"])}</div>
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            {isComplete ? (
+              <span className="text-sm text-gray-600">{account.historyStatus || "Done"}</span>
+            ) : (
+              <select
+                disabled={!isSelected || isDisabled}
+                value={statusData[account._id] || ""}
+                onChange={(e) => handleStatusChange(account._id, e.target.value)}
+                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">Select</option>
+                <option value="Done">Done</option>
+                <option value="Extend date">Extend date</option>
+              </select>
+            )}
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            {isComplete ? (
+              <div className="text-sm text-gray-900">{formatDateForDisplay(account["col10"])}</div>
+            ) : (
+              <input
+                type="date"
+                disabled={!isSelected || statusData[account._id] !== "Extend date" || isDisabled}
+                value={
+                  nextTargetDate[account._id]
+                    ? (() => {
+                      const dateStr = nextTargetDate[account._id]
+                      if (dateStr && dateStr.includes("/")) {
+                        const [day, month, year] = dateStr.split("/")
+                        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+                      }
+                      return dateStr
+                    })()
+                    : ""
+                }
+                onChange={(e) => {
+                  const inputDate = e.target.value
+                  if (inputDate) {
+                    const [year, month, day] = inputDate.split("-")
+                    const formattedDate = `${day}/${month}/${year}`
+                    handleNextTargetDateChange(account._id, formattedDate)
+                  } else {
+                    handleNextTargetDateChange(account._id, "")
+                  }
+                }}
+                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            )}
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            {isComplete ? (
+              <div className="text-sm text-gray-900 max-w-md whitespace-normal break-words">
+                {account.historyRemarks || "—"}
+              </div>
+            ) : (
+              <input
+                type="text"
+                placeholder="Enter remarks"
+                disabled={!isSelected || isDisabled}
+                value={remarksData[account._id] || ""}
+                onChange={(e) => setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))}
+                className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            )}
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap">
+            {isComplete ? (
+              account.historyImage ? (
+                <a
+                  href={account.historyImage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                >
+                  <img
+                    src={account.historyImage}
+                    alt="Attachment"
+                    className="h-8 w-8 object-cover rounded-md mr-2"
+                  />
+                  View
+                </a>
+              ) : (
+                <span className="text-gray-400">No attachment</span>
+              )
+            ) : account.image ? (
+              <div className="flex items-center">
+                <img
+                  src={
+                    typeof account.image === "string"
+                      ? account.image
+                      : URL.createObjectURL(account.image)
+                  }
+                  alt="Receipt"
+                  className="h-10 w-10 object-cover rounded-md mr-2"
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500">
+                    {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
+                  </span>
+                  {account.image instanceof File ? (
+                    <span className="text-xs text-green-600">Ready to upload</span>
+                  ) : (
+                    <button
+                      className="text-xs text-purple-600 hover:text-purple-800"
+                      onClick={() => window.open(account.image, "_blank")}
+                    >
+                      View Full Image
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <label
+                className={`flex items-center cursor-pointer ${
+                  account["col9"]?.toUpperCase() === "YES"
+                    ? "text-red-600 font-medium"
+                    : "text-purple-600"
+                } hover:text-purple-800 ${isDisabled ? "pointer-events-none opacity-50" : ""}`}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                <span className="text-xs">
+                  {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Image"}
+                  {account["col9"]?.toUpperCase() === "YES" && (
+                    <span className="text-red-500 ml-1">*</span>
+                  )}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(account._id, e)}
+                  disabled={!isSelected || isDisabled}
+                />
+              </label>
+            )}
+          </td>
+        </tr>
+      )
+    })
+  ) : (
+    <tr>
+      <td colSpan={13} className="px-6 py-4 text-center text-gray-500">
+        {searchTerm || statusFilter !== "all" 
+          ? "No tasks matching your filters" 
+          : "No tasks found"}
+      </td>
+    </tr>
+  )}
+</tbody>
                 </table>
               </div>
             )}

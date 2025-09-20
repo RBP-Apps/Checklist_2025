@@ -335,22 +335,32 @@ const fetchDepartmentData = async () => {
       }
 
       // UPDATED: Different filtering logic for delegation vs checklist
+     // UPDATED: Different filtering logic for delegation vs checklist
       let assignedTo, isUserMatch;
       
       if (dashboardType === "delegation") {
-        // For DELEGATION mode: Filter by Column D (index 3) matching logged-in admin
-        assignedTo = getCellValue(row, 3) || 'Unassigned'; // Column D (index 3)
-        isUserMatch = userRole === 'admin' && 
-          assignedTo.toLowerCase() === username.toLowerCase();
+        // For DELEGATION mode: Filter by Column D (admin assignment) OR Column E (user assignment)
+        const columnD = getCellValue(row, 3) || 'Unassigned'; // Column D (index 3) - Admin assignment
+        const columnE = getCellValue(row, 4) || 'Unassigned'; // Column E (index 4) - User assignment
+        
+        // Check if current user matches either Column D (admin) or Column E (user)
+        const isColumnDMatch = userRole === 'admin' && 
+          columnD.toLowerCase() === username.toLowerCase();
+        const isColumnEMatch = columnE.toLowerCase() === username.toLowerCase();
+        
+        isUserMatch = isColumnDMatch || isColumnEMatch;
+        
+        // Set assignedTo based on which column matched (prioritize Column D if both match)
+        assignedTo = isColumnDMatch ? columnD : columnE;
         
         // Debug: Log delegation filtering
         if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1} (DELEGATION): Column D="${assignedTo}", username="${username}", userRole="${userRole}", isMatch=${isUserMatch}`);
+          console.log(`Row ${rowIndex + 1} (DELEGATION): Column D="${columnD}", Column E="${columnE}", username="${username}", userRole="${userRole}", isColumnDMatch=${isColumnDMatch}, isColumnEMatch=${isColumnEMatch}, finalMatch=${isUserMatch}`);
         }
         
         // If not a match for delegation, skip this row
         if (!isUserMatch) {
-          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to Column D mismatch in delegation mode`);
+          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to no match in either Column D or E in delegation mode`);
           return null;
         }
       } else {
