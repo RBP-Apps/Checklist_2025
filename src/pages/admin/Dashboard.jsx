@@ -243,251 +243,314 @@ export default function AdminDashboard() {
   }
 
   // Modified fetch function to support both checklist and delegation
-  const fetchDepartmentData = async () => {
-    // For delegation mode, always use "DELEGATION" sheet
-    // For checklist mode, use "Checklist" as default sheet
-    const sheetName = dashboardType === "delegation" ? "DELEGATION" : "Checklist";
+// Modified fetch function to support both checklist and delegation
+const fetchDepartmentData = async () => {
+  // For delegation mode, always use "DELEGATION" sheet
+  // For checklist mode, use "Checklist" as default sheet
+  const sheetName = dashboardType === "delegation" ? "DELEGATION" : "Checklist";
 
-    try {
-      // Debug: Log which sheet we're fetching
-      console.log(`Fetching data for dashboard type: ${dashboardType}, sheet: ${sheetName}`);
-     
-      const response = await fetch(`https://docs.google.com/spreadsheets/d/1nvU1bQOkLNMwatRSbcTPJd0vhDGeqrhY8gL1s0YWGww/gviz/tq?tqx=out:json&sheet=${sheetName}`);
+  try {
+    // Debug: Log which sheet we're fetching
+    console.log(`Fetching data for dashboard type: ${dashboardType}, sheet: ${sheetName}`);
+   
+    const response = await fetch(`https://docs.google.com/spreadsheets/d/1nvU1bQOkLNMwatRSbcTPJd0vhDGeqrhY8gL1s0YWGww/gviz/tq?tqx=out:json&sheet=${sheetName}`);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${sheetName} sheet data: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${sheetName} sheet data: ${response.status}`);
+    }
+
+    const text = await response.text();
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    const jsonString = text.substring(jsonStart, jsonEnd + 1);
+    const data = JSON.parse(jsonString);
+
+    // Debug: Log the fetched data structure
+    console.log(`Fetched data from ${sheetName}:`, {
+      totalRows: data.table.rows.length,
+      firstFewRows: data.table.rows.slice(0, 3).map((row, idx) => ({
+        rowIndex: idx,
+        rowData: row.c ? row.c.map(cell => cell?.v) : row
+      }))
+    });
+
+    // Get current user details
+    const username = sessionStorage.getItem('username');
+    const userRole = sessionStorage.getItem('role');
+
+    // Initialize counters
+    let totalTasks = 0;
+    let completedTasks = 0;
+    let pendingTasks = 0;
+    let overdueTasks = 0;
+
+    // Add new counters for delegation mode
+    let completedRatingOne = 0;
+    let completedRatingTwo = 0;
+    let completedRatingThreePlus = 0;
+
+    // Monthly data for bar chart
+    const monthlyData = {
+      Jan: { completed: 0, pending: 0 },
+      Feb: { completed: 0, pending: 0 },
+      Mar: { completed: 0, pending: 0 },
+      Apr: { completed: 0, pending: 0 },
+      May: { completed: 0, pending: 0 },
+      Jun: { completed: 0, pending: 0 },
+      Jul: { completed: 0, pending: 0 },
+      Aug: { completed: 0, pending: 0 },
+      Sep: { completed: 0, pending: 0 },
+      Oct: { completed: 0, pending: 0 },
+      Nov: { completed: 0, pending: 0 },
+      Dec: { completed: 0, pending: 0 }
+    };
+
+    // Status data for pie chart
+    const statusData = {
+      Completed: 0,
+      Pending: 0,
+      Overdue: 0
+    };
+
+    // Staff tracking map
+    const staffTrackingMap = new Map();
+
+    // Get today's date for comparison (only used for checklist mode)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Get tomorrow's date for comparison (only used for checklist mode)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    // Process row data
+    const processedRows = data.table.rows.map((row, rowIndex) => {
+      // Skip header row
+      if (rowIndex === 0) return null;
+
+      // Debug: Log row processing for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Processing row ${rowIndex + 1} (sheet row ${rowIndex + 1}):`, row);
       }
 
-      const text = await response.text();
-      const jsonStart = text.indexOf('{');
-      const jsonEnd = text.lastIndexOf('}');
-      const jsonString = text.substring(jsonStart, jsonEnd + 1);
-      const data = JSON.parse(jsonString);
-
-      // Debug: Log the fetched data structure
-      console.log(`Fetched data from ${sheetName}:`, {
-        totalRows: data.table.rows.length,
-        firstFewRows: data.table.rows.slice(0, 3).map((row, idx) => ({
-          rowIndex: idx,
-          rowData: row.c ? row.c.map(cell => cell?.v) : row
-        }))
-      });
-
-      // Get current user details
-      const username = sessionStorage.getItem('username');
-      const userRole = sessionStorage.getItem('role');
-
-      // Initialize counters
-      let totalTasks = 0;
-      let completedTasks = 0;
-      let pendingTasks = 0;
-      let overdueTasks = 0;
-
-      // Add new counters for delegation mode
-      let completedRatingOne = 0;
-      let completedRatingTwo = 0;
-      let completedRatingThreePlus = 0;
-
-      // Monthly data for bar chart
-      const monthlyData = {
-        Jan: { completed: 0, pending: 0 },
-        Feb: { completed: 0, pending: 0 },
-        Mar: { completed: 0, pending: 0 },
-        Apr: { completed: 0, pending: 0 },
-        May: { completed: 0, pending: 0 },
-        Jun: { completed: 0, pending: 0 },
-        Jul: { completed: 0, pending: 0 },
-        Aug: { completed: 0, pending: 0 },
-        Sep: { completed: 0, pending: 0 },
-        Oct: { completed: 0, pending: 0 },
-        Nov: { completed: 0, pending: 0 },
-        Dec: { completed: 0, pending: 0 }
-      };
-
-      // Status data for pie chart
-      const statusData = {
-        Completed: 0,
-        Pending: 0,
-        Overdue: 0
-      };
-
-      // Staff tracking map
-      const staffTrackingMap = new Map();
-
-      // Get today's date for comparison (only used for checklist mode)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Get tomorrow's date for comparison (only used for checklist mode)
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
-
-      // Process row data
-      const processedRows = data.table.rows.map((row, rowIndex) => {
-        // Skip header row
-        if (rowIndex === 0) return null;
-
-        // Debug: Log row processing for first few rows
+      // UPDATED: Different filtering logic for delegation vs checklist
+      let assignedTo, isUserMatch;
+      
+      if (dashboardType === "delegation") {
+        // For DELEGATION mode: Filter by Column D (index 3) matching logged-in admin
+        assignedTo = getCellValue(row, 3) || 'Unassigned'; // Column D (index 3)
+        isUserMatch = userRole === 'admin' && 
+          assignedTo.toLowerCase() === username.toLowerCase();
+        
+        // Debug: Log delegation filtering
         if (rowIndex <= 5) {
-          console.log(`Processing row ${rowIndex + 1} (sheet row ${rowIndex + 1}):`, row);
+          console.log(`Row ${rowIndex + 1} (DELEGATION): Column D="${assignedTo}", username="${username}", userRole="${userRole}", isMatch=${isUserMatch}`);
         }
-
-        // For non-admin users, filter by username in Column E (index 4) - "Name"
-        const assignedTo = getCellValue(row, 4) || 'Unassigned';
-        const isUserMatch = userRole === 'admin' ||
+        
+        // If not a match for delegation, skip this row
+        if (!isUserMatch) {
+          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to Column D mismatch in delegation mode`);
+          return null;
+        }
+      } else {
+        // For CHECKLIST mode: Use existing logic - Column E (index 4) for "Name"
+        assignedTo = getCellValue(row, 4) || 'Unassigned'; // Column E (index 4)
+        isUserMatch = userRole === 'admin' ||
           assignedTo.toLowerCase() === username.toLowerCase();
 
-        // Debug: Log user matching for first few rows
+        // Debug: Log checklist filtering
         if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: assignedTo="${assignedTo}", username="${username}", userRole="${userRole}", isMatch=${isUserMatch}`);
+          console.log(`Row ${rowIndex + 1} (CHECKLIST): Column E="${assignedTo}", username="${username}", userRole="${userRole}", isMatch=${isUserMatch}`);
         }
 
         // If not a match and not admin, skip this row
         if (!isUserMatch) {
-          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to user mismatch`);
+          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to user mismatch in checklist mode`);
           return null;
         }
+      }
 
-        // Check column B for valid task row - "Task ID"
-        const taskId = getCellValue(row, 1); // Column B (index 1)
-       
-        // Debug: Log task ID for first few rows
-        if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: taskId="${taskId}" (type: ${typeof taskId})`);
-        }
-       
-        // More lenient validation - allow any non-empty value as task ID
-        if (taskId === null || taskId === undefined || taskId === '' ||
+      // Check column B for valid task row - "Task ID"
+      const taskId = getCellValue(row, 1); // Column B (index 1)
+     
+      // Debug: Log task ID for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Row ${rowIndex + 1}: taskId="${taskId}" (type: ${typeof taskId})`);
+      }
+     
+      // More lenient validation - allow any non-empty value as task ID
+      if (taskId === null || taskId === undefined || taskId === '' ||
+          (typeof taskId === 'string' && taskId.trim() === '')) {
+        if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to empty/null task ID`);
+        return null;
+      }
+
+      // Convert task ID to string for consistency
+      const taskIdStr = String(taskId).trim();
+
+      // Get task start date from Column G (index 6) - "Task Start Date"
+      let taskStartDateValue = getCellValue(row, 6);
+      const taskStartDate = taskStartDateValue ? parseGoogleSheetsDate(String(taskStartDateValue)) : '';
+
+      // Debug: Log task start date for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Row ${rowIndex + 1}: taskStartDateValue="${taskStartDateValue}", parsed="${taskStartDate}"`);
+      }
+
+      // UPDATED: Different date filtering logic for delegation vs checklist
+      if (dashboardType === "delegation") {
+        // For DELEGATION mode: Process ALL tasks with valid task IDs, no date filtering
+        if (!taskId || taskId === null || taskId === undefined || taskId === '' ||
             (typeof taskId === 'string' && taskId.trim() === '')) {
-          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to empty/null task ID`);
+          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to invalid task ID in delegation mode`);
           return null;
         }
-
-        // Convert task ID to string for consistency
-        const taskIdStr = String(taskId).trim();
-
-        // Get task start date from Column G (index 6) - "Task Start Date"
-        let taskStartDateValue = getCellValue(row, 6);
-        const taskStartDate = taskStartDateValue ? parseGoogleSheetsDate(String(taskStartDateValue)) : '';
-
-        // Debug: Log task start date for first few rows
+      } else {
+        // For CHECKLIST mode: Keep existing date filtering logic
+        const taskStartDateObj = parseDateFromDDMMYYYY(taskStartDate);
+        
         if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: taskStartDateValue="${taskStartDateValue}", parsed="${taskStartDate}"`);
+          console.log(`Row ${rowIndex + 1}: taskStartDateObj=${taskStartDateObj}, today=${today}, tomorrow=${tomorrow}, isValid=${!!taskStartDateObj}`);
         }
+        
+        // Process tasks that have a valid start date and are due up to tomorrow (include tomorrow's tasks)
+        if (!taskStartDateObj || taskStartDateObj > tomorrow) {
+          if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to invalid/far future date (beyond tomorrow)`);
+          return null; // Skip tasks beyond tomorrow
+        }
+      }
 
-        // UPDATED: Different date filtering logic for delegation vs checklist
-        if (dashboardType === "delegation") {
-          // For DELEGATION mode: Process ALL tasks with valid task IDs, no date filtering
-          if (!taskId || taskId === null || taskId === undefined || taskId === '' ||
-              (typeof taskId === 'string' && taskId.trim() === '')) {
-            if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to invalid task ID in delegation mode`);
-            return null;
+      // Get completion data based on dashboard type
+      let completionDateValue, completionDate;
+      if (dashboardType === "delegation") {
+        // For delegation: Column L (index 11) - "Actual"
+        completionDateValue = getCellValue(row, 11);
+      } else {
+        // For checklist: Column K (index 10) - "Actual"
+        completionDateValue = getCellValue(row, 10);
+      }
+     
+      completionDate = completionDateValue ? parseGoogleSheetsDate(String(completionDateValue)) : '';
+
+      // Debug: Log completion date for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Row ${rowIndex + 1}: completionDateValue="${completionDateValue}", parsed="${completionDate}"`);
+      }
+
+      // Track staff details
+      if (!staffTrackingMap.has(assignedTo)) {
+        staffTrackingMap.set(assignedTo, {
+          name: assignedTo,
+          totalTasks: 0,
+          completedTasks: 0,
+          pendingTasks: 0,
+          progress: 0
+        });
+      }
+
+      // Get additional task details
+      const taskDescription = getCellValue(row, 5) || 'Untitled Task'; // Column F - "Task Description"
+      const frequency = getCellValue(row, 7) || 'one-time'; // Column H - "Freq"
+     
+      // UPDATED: Determine task status for display purposes - restored overdue logic for delegation
+      let status = 'pending';
+     
+      if (completionDate && completionDate !== '') {
+        status = 'completed';
+      } else if (isDateInPast(taskStartDate) && !isDateToday(taskStartDate)) {
+        // For both modes: past dates (excluding today) = overdue
+        status = 'overdue';
+      } else {
+        // For both modes: today or future dates = pending
+        status = 'pending';
+      }
+
+      // Debug: Log status determination for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Row ${rowIndex + 1}: status="${status}", completionDate="${completionDate}", dashboardType="${dashboardType}"`);
+      }
+
+      // Create the task object
+      const taskObj = {
+        id: taskIdStr,
+        title: taskDescription,
+        assignedTo,
+        taskStartDate,
+        dueDate: taskStartDate, // Keep for compatibility
+        status,
+        frequency
+      };
+
+      // Debug: Log task object for first few rows
+      if (rowIndex <= 5) {
+        console.log(`Row ${rowIndex + 1}: Created task object:`, taskObj);
+      }
+
+      // Update staff member totals
+      const staffData = staffTrackingMap.get(assignedTo);
+      staffData.totalTasks++;
+
+      // UPDATED: Count for dashboard cards - different logic for delegation vs checklist
+      if (dashboardType === "delegation") {
+        // For DELEGATION mode: Count ALL valid tasks, no date restrictions
+        totalTasks++;
+
+        if (status === 'completed') {
+          completedTasks++;
+          staffData.completedTasks++;
+          statusData.Completed++;
+
+          // For delegation mode, count by rating
+          const ratingValue = getCellValue(row, 17); // Column R - "Pending Color Code"
+          if (ratingValue === 1) {
+            completedRatingOne++;
+          } else if (ratingValue === 2) {
+            completedRatingTwo++;
+          } else if (ratingValue > 2) {
+            completedRatingThreePlus++;
+          }
+
+          // Update monthly data for completed tasks
+          const completedMonth = parseDateFromDDMMYYYY(completionDate);
+          if (completedMonth) {
+            const monthName = completedMonth.toLocaleString('default', { month: 'short' });
+            if (monthlyData[monthName]) {
+              monthlyData[monthName].completed++;
+            }
           }
         } else {
-          // For CHECKLIST mode: Keep existing date filtering logic
-          const taskStartDateObj = parseDateFromDDMMYYYY(taskStartDate);
-          
-          if (rowIndex <= 5) {
-            console.log(`Row ${rowIndex + 1}: taskStartDateObj=${taskStartDateObj}, today=${today}, tomorrow=${tomorrow}, isValid=${!!taskStartDateObj}`);
+          // Task is not completed - apply counting logic for both modes
+          staffData.pendingTasks++;
+         
+          if (isDateInPast(taskStartDate) && !isDateToday(taskStartDate)) {
+            // Past dates (excluding today) = overdue
+            overdueTasks++;
+            statusData.Overdue++;
           }
-          
-          // Process tasks that have a valid start date and are due up to tomorrow (include tomorrow's tasks)
-          if (!taskStartDateObj || taskStartDateObj > tomorrow) {
-            if (rowIndex <= 5) console.log(`Row ${rowIndex + 1}: Skipped due to invalid/far future date (beyond tomorrow)`);
-            return null; // Skip tasks beyond tomorrow
+         
+          // All incomplete tasks (including overdue + today) = pending
+          pendingTasks++;
+          statusData.Pending++;
+
+          // Update monthly data for pending tasks
+          const monthName = (dashboardType === "delegation" ? new Date() : today).toLocaleString('default', { month: 'short' });
+          if (monthlyData[monthName]) {
+            monthlyData[monthName].pending++;
           }
         }
-
-        // Get completion data based on dashboard type
-        let completionDateValue, completionDate;
-        if (dashboardType === "delegation") {
-          // For delegation: Column L (index 11) - "Actual"
-          completionDateValue = getCellValue(row, 11);
-        } else {
-          // For checklist: Column K (index 10) - "Actual"
-          completionDateValue = getCellValue(row, 10);
-        }
-       
-        completionDate = completionDateValue ? parseGoogleSheetsDate(String(completionDateValue)) : '';
-
-        // Debug: Log completion date for first few rows
-        if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: completionDateValue="${completionDateValue}", parsed="${completionDate}"`);
-        }
-
-        // Track staff details
-        if (!staffTrackingMap.has(assignedTo)) {
-          staffTrackingMap.set(assignedTo, {
-            name: assignedTo,
-            totalTasks: 0,
-            completedTasks: 0,
-            pendingTasks: 0,
-            progress: 0
-          });
-        }
-
-        // Get additional task details
-        const taskDescription = getCellValue(row, 5) || 'Untitled Task'; // Column F - "Task Description"
-        const frequency = getCellValue(row, 7) || 'one-time'; // Column H - "Freq"
-       
-        // UPDATED: Determine task status for display purposes - restored overdue logic for delegation
-        let status = 'pending';
-       
-        if (completionDate && completionDate !== '') {
-          status = 'completed';
-        } else if (isDateInPast(taskStartDate) && !isDateToday(taskStartDate)) {
-          // For both modes: past dates (excluding today) = overdue
-          status = 'overdue';
-        } else {
-          // For both modes: today or future dates = pending
-          status = 'pending';
-        }
-
-        // Debug: Log status determination for first few rows
-        if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: status="${status}", completionDate="${completionDate}", dashboardType="${dashboardType}"`);
-        }
-
-        // Create the task object
-        const taskObj = {
-          id: taskIdStr,
-          title: taskDescription,
-          assignedTo,
-          taskStartDate,
-          dueDate: taskStartDate, // Keep for compatibility
-          status,
-          frequency
-        };
-
-        // Debug: Log task object for first few rows
-        if (rowIndex <= 5) {
-          console.log(`Row ${rowIndex + 1}: Created task object:`, taskObj);
-        }
-
-        // Update staff member totals
-        const staffData = staffTrackingMap.get(assignedTo);
-        staffData.totalTasks++;
-
-        // UPDATED: Count for dashboard cards - different logic for delegation vs checklist
-        if (dashboardType === "delegation") {
-          // For DELEGATION mode: Count ALL valid tasks, no date restrictions
+      } else {
+        // For CHECKLIST mode: Keep existing logic with date restrictions
+        const taskStartDateObj = parseDateFromDDMMYYYY(taskStartDate);
+        const shouldCountInStats = taskStartDateObj <= today;
+        
+        if (shouldCountInStats) {
           totalTasks++;
 
           if (status === 'completed') {
             completedTasks++;
             staffData.completedTasks++;
             statusData.Completed++;
-
-            // For delegation mode, count by rating
-            const ratingValue = getCellValue(row, 17); // Column R - "Pending Color Code"
-            if (ratingValue === 1) {
-              completedRatingOne++;
-            } else if (ratingValue === 2) {
-              completedRatingTwo++;
-            } else if (ratingValue > 2) {
-              completedRatingThreePlus++;
-            }
 
             // Update monthly data for completed tasks
             const completedMonth = parseDateFromDDMMYYYY(completionDate);
@@ -498,7 +561,6 @@ export default function AdminDashboard() {
               }
             }
           } else {
-            // Task is not completed - apply counting logic for both modes
             staffData.pendingTasks++;
            
             if (isDateInPast(taskStartDate) && !isDateToday(taskStartDate)) {
@@ -512,124 +574,84 @@ export default function AdminDashboard() {
             statusData.Pending++;
 
             // Update monthly data for pending tasks
-            const monthName = (dashboardType === "delegation" ? new Date() : today).toLocaleString('default', { month: 'short' });
+            const monthName = today.toLocaleString('default', { month: 'short' });
             if (monthlyData[monthName]) {
               monthlyData[monthName].pending++;
             }
           }
-        } else {
-          // For CHECKLIST mode: Keep existing logic with date restrictions
-          const taskStartDateObj = parseDateFromDDMMYYYY(taskStartDate);
-          const shouldCountInStats = taskStartDateObj <= today;
-          
-          if (shouldCountInStats) {
-            totalTasks++;
-
-            if (status === 'completed') {
-              completedTasks++;
-              staffData.completedTasks++;
-              statusData.Completed++;
-
-              // Update monthly data for completed tasks
-              const completedMonth = parseDateFromDDMMYYYY(completionDate);
-              if (completedMonth) {
-                const monthName = completedMonth.toLocaleString('default', { month: 'short' });
-                if (monthlyData[monthName]) {
-                  monthlyData[monthName].completed++;
-                }
-              }
-            } else {
-              staffData.pendingTasks++;
-             
-              if (isDateInPast(taskStartDate) && !isDateToday(taskStartDate)) {
-                // Past dates (excluding today) = overdue
-                overdueTasks++;
-                statusData.Overdue++;
-              }
-             
-              // All incomplete tasks (including overdue + today) = pending
-              pendingTasks++;
-              statusData.Pending++;
-
-              // Update monthly data for pending tasks
-              const monthName = today.toLocaleString('default', { month: 'short' });
-              if (monthlyData[monthName]) {
-                monthlyData[monthName].pending++;
-              }
-            }
-          }
         }
+      }
 
-        return taskObj;
-      }).filter(task => task !== null);
+      return taskObj;
+    }).filter(task => task !== null);
 
-      // Debug: Log processing summary
-      console.log(`Processing summary for ${sheetName}:`);
-      console.log(`  Dashboard type: ${dashboardType}`);
-      console.log(`  Total rows in sheet: ${data.table.rows.length}`);
-      console.log(`  Rows after filtering: ${processedRows.length}`);
-      console.log(`  Total tasks counted: ${totalTasks}`);
-      console.log(`  Completed tasks: ${completedTasks}`);
-      console.log(`  Pending tasks: ${pendingTasks}`);
-      console.log(`  Overdue tasks: ${overdueTasks}`);
-      console.log(`  Completed Rating 1: ${completedRatingOne}`);
-      console.log(`  Completed Rating 2: ${completedRatingTwo}`);
-      console.log(`  Completed Rating 3+: ${completedRatingThreePlus}`);
+    // Debug: Log processing summary
+    console.log(`Processing summary for ${sheetName}:`);
+    console.log(`  Dashboard type: ${dashboardType}`);
+    console.log(`  Total rows in sheet: ${data.table.rows.length}`);
+    console.log(`  Rows after filtering: ${processedRows.length}`);
+    console.log(`  Total tasks counted: ${totalTasks}`);
+    console.log(`  Completed tasks: ${completedTasks}`);
+    console.log(`  Pending tasks: ${pendingTasks}`);
+    console.log(`  Overdue tasks: ${overdueTasks}`);
+    console.log(`  Completed Rating 1: ${completedRatingOne}`);
+    console.log(`  Completed Rating 2: ${completedRatingTwo}`);
+    console.log(`  Completed Rating 3+: ${completedRatingThreePlus}`);
 
-      // Calculate completion rate
-      const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
+    // Calculate completion rate
+    const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
 
-      // Convert monthly data to chart format
-      const barChartData = Object.entries(monthlyData).map(([name, data]) => ({
-        name,
-        completed: data.completed,
-        pending: data.pending
-      }));
+    // Convert monthly data to chart format
+    const barChartData = Object.entries(monthlyData).map(([name, data]) => ({
+      name,
+      completed: data.completed,
+      pending: data.pending
+    }));
 
-      // Convert status data to pie chart format
-      const pieChartData = [
-        { name: "Completed", value: statusData.Completed, color: "#22c55e" },
-        { name: "Pending", value: statusData.Pending, color: "#facc15" },
-        { name: "Overdue", value: statusData.Overdue, color: "#ef4444" }
-      ];
+    // Convert status data to pie chart format
+    const pieChartData = [
+      { name: "Completed", value: statusData.Completed, color: "#22c55e" },
+      { name: "Pending", value: statusData.Pending, color: "#facc15" },
+      { name: "Overdue", value: statusData.Overdue, color: "#ef4444" }
+    ];
 
-      // Process staff tracking map
-      const staffMembers = Array.from(staffTrackingMap.values()).map(staff => {
-        const progress = staff.totalTasks > 0
-          ? Math.round((staff.completedTasks / staff.totalTasks) * 100)
-          : 0;
+    // Process staff tracking map
+    const staffMembers = Array.from(staffTrackingMap.values()).map(staff => {
+      const progress = staff.totalTasks > 0
+        ? Math.round((staff.completedTasks / staff.totalTasks) * 100)
+        : 0;
 
-        return {
-          id: staff.name.replace(/\s+/g, '-').toLowerCase(),
-          name: staff.name,
-          email: `${staff.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          totalTasks: staff.totalTasks,
-          completedTasks: staff.completedTasks,
-          pendingTasks: staff.pendingTasks,
-          progress
-        };
-      });
+      return {
+        id: staff.name.replace(/\s+/g, '-').toLowerCase(),
+        name: staff.name,
+        email: `${staff.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        totalTasks: staff.totalTasks,
+        completedTasks: staff.completedTasks,
+        pendingTasks: staff.pendingTasks,
+        progress
+      };
+    });
 
-      // Update department data state
-      setDepartmentData({
-        allTasks: processedRows,
-        staffMembers,
-        totalTasks,
-        completedTasks,
-        pendingTasks,
-        overdueTasks,
-        completionRate,
-        barChartData,
-        pieChartData,
-        completedRatingOne,
-        completedRatingTwo,
-        completedRatingThreePlus
-      });
+    // Update department data state
+    setDepartmentData({
+      allTasks: processedRows,
+      staffMembers,
+      totalTasks,
+      completedTasks,
+      pendingTasks,
+      overdueTasks,
+      completionRate,
+      barChartData,
+      pieChartData,
+      completedRatingOne,
+      completedRatingTwo,
+      completedRatingThreePlus
+    });
 
-    } catch (error) {
-      console.error(`Error fetching ${sheetName} sheet data:`, error);
-    }
-  };
+  } catch (error) {
+    console.error(`Error fetching ${sheetName} sheet data:`, error);
+  }
+};
 
   useEffect(() => {
     fetchDepartmentData();
