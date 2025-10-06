@@ -852,7 +852,7 @@ const handleSelectAllItems = useCallback(
       <h2 className="text-purple-700 font-medium">
   {showHistory
     ? `Completed ${CONFIG.SOURCE_SHEET_NAME} Tasks`
-    : `${CONFIG.SOURCE_SHEET_NAME} Tasks - Assigned To Me & Assigned By Me`}  // ← NEW TEXT
+    : `${CONFIG.SOURCE_SHEET_NAME} Tasks - Assigned To Me & Assigned By Me`}  
 </h2>
 
       <p className="text-purple-600 text-sm">
