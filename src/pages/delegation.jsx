@@ -180,7 +180,7 @@ const [statusFilter, setStatusFilter] = useState("all")
 
   const formatDateForDisplay = useCallback(
     (dateStr) => {
-      if (!dateStr) return "â€”"
+      if (!dateStr) return "-"
 
       // If it's already in proper DD/MM/YYYY format, return as is
       if (typeof dateStr === "string" && dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
@@ -188,7 +188,7 @@ const [statusFilter, setStatusFilter] = useState("all")
       }
 
       // Try to parse and reformat
-      return parseGoogleSheetsDate(dateStr) || "â€”"
+      return parseGoogleSheetsDate(dateStr) || "-"
     },
     [parseGoogleSheetsDate],
   )
@@ -984,10 +984,10 @@ const handleSelectAllItems = useCallback(
                         filteredHistoryData.map((history) => (
                           <tr key={history._id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{history["col0"] || "â€”"}</div>
+                              <div className="text-sm font-medium text-gray-900">{history["col0"] || "-"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{history["col1"] || "â€”"}</div>
+                              <div className="text-sm text-gray-900">{history["col1"] || "-"}</div>
                             </td>
 
                             <td className="px-6 py-4 min-w-[250px]">
@@ -995,7 +995,7 @@ const handleSelectAllItems = useCallback(
                               className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
                               title={history["col8"]}
                             >
-                              {history["col8"] || "â€”"}
+                              {history["col8"] || "-"}
                             </div>
                           </td>
                           {/* NEW ATTACHED FILE COLUMN */}
@@ -1013,7 +1013,7 @@ const handleSelectAllItems = useCallback(
                                 View File
                               </a>
                             ) : (
-                              <span className="text-sm text-gray-400">â€”</span>
+                              <span className="text-sm text-gray-400">-</span>
                             )}
                           </td>
 
@@ -1026,18 +1026,18 @@ const handleSelectAllItems = useCallback(
                                     : "bg-gray-100 text-gray-800"
                                   }`}
                               >
-                                {history["col2"] || "â€”"}
+                                {history["col2"] || "-"}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{formatDateForDisplay(history["col3"]) || "â€”"}</div>
+                              <div className="text-sm text-gray-900">{formatDateForDisplay(history["col3"]) || "-"}</div>
                             </td>
                             <td className="px-6 py-4 bg-purple-50 min-w-[200px]">
                               <div
                                 className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
                                 title={history["col4"]}
                               >
-                                {history["col4"] || "â€”"}
+                                {history["col4"] || "-"}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -1061,11 +1061,11 @@ const handleSelectAllItems = useCallback(
                             </td>
                             {userRole === "admin" && (
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{history["col7"] || "â€”"}</div>
+                                <div className="text-sm text-gray-900">{history["col7"] || "-"}</div>
                               </td>
                             )}
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{history["col9"] || "â€”"}</div>
+                              <div className="text-sm text-gray-900">{history["col9"] || "-"}</div>
                             </td>
                           </tr>
                         ))
@@ -1163,7 +1163,7 @@ const handleSelectAllItems = useCallback(
 
           {/* Task ID - col1 */}
           <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col1"] || "â€”"}</div>
+            <div className="text-sm text-gray-900">{account["col1"] || "-"}</div>
           </td>
 
           {/* Status */}
@@ -1175,23 +1175,23 @@ const handleSelectAllItems = useCallback(
 
           {/* Department - col2 */}
           <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col2"] || "â€”"}</div>
+            <div className="text-sm text-gray-900">{account["col2"] || "-"}</div>
           </td>
 
           {/* Given By - col3 */}
           <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col3"] || "â€”"}</div>
+            <div className="text-sm text-gray-900">{account["col3"] || "-"}</div>
           </td>
 
           {/* Name - col4 */}
           <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col4"] || "â€”"}</div>
+            <div className="text-sm text-gray-900">{account["col4"] || "-"}</div>
           </td>
 
           {/* Task Description - col5 */}
           <td className="px-6 py-4 min-w-[250px]">
             <div className="text-sm text-gray-900 max-w-md whitespace-normal break-words" title={account["col5"]}>
-              {account["col5"] || "â€”"}
+              {account["col5"] || "-"}
             </div>
           </td>
 
@@ -1205,7 +1205,7 @@ const handleSelectAllItems = useCallback(
                 View File
               </a>
             ) : (
-              <span className="text-sm text-gray-400">â€”</span>
+              <span className="text-sm text-gray-400">No Attachement</span>
             )}
           </td>
 
