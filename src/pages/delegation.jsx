@@ -21,7 +21,7 @@ const CONFIG = {
  PAGE_CONFIG: {
   title: "DELEGATION Tasks",
   historyTitle: "DELEGATION Task History",
-  description: "Showing both tasks assigned to you and tasks you assign to others",  // ← NEW TEXT
+  description: "Showing both tasks assigned to you and tasks you assign to others", 
   historyDescription: "Read-only view of completed tasks with submission history",
 },
 
