@@ -230,7 +230,7 @@ export default function AssignTask() {
     givenBy: sessionStorage.getItem('userFullName') || "",
     doer: [],
     description: "",
-    frequency: "daily",
+    frequency: "one-time",
     enableReminders: true,
     requireAttachment: false,
   });
@@ -824,9 +824,7 @@ export default function AssignTask() {
         return;
       }
 
-      // File upload logic
-     // File upload logic
-// File upload logic - Simplified version
+  
 // File upload logic - EXACT WORKING VERSION
 let imageUrl = null;
 if (selectedFile) {
@@ -936,7 +934,7 @@ const fileToBase64 = (file) => {
         givenBy: sessionStorage.getItem('userFullName') || "",
         doer: [],
         description: "",
-        frequency: "daily",
+        frequency: "one-time",
         enableReminders: true,
         requireAttachment: false
       });
@@ -1446,7 +1444,7 @@ const fileToBase64 = (file) => {
                     givenBy: sessionStorage.getItem('userFullName') || "",
                     doer: [],
                     description: "",
-                    frequency: "daily",
+                    frequency: "one-time",
                     enableReminders: true,
                     requireAttachment: false,
                   });

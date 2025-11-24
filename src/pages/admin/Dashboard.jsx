@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BarChart3, CheckCircle2, Clock, ListTodo, Users, AlertTriangle, Filter } from 'lucide-react'
+import { BarChart3, CheckCircle2, Clock, ListTodo, Users, AlertTriangle, Filter,X } from 'lucide-react'
 import AdminLayout from "../../components/layout/AdminLayout.jsx"
 import {
   BarChart,
@@ -24,6 +24,9 @@ export default function AdminDashboard() {
   const [filterStaff, setFilterStaff] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("overview")
+  const [filterDepartment, setFilterDepartment] = useState("all");
+const [filterName, setFilterName] = useState("all");
+
 
   // State for department data
   const [departmentData, setDepartmentData] = useState({
@@ -44,6 +47,14 @@ export default function AdminDashboard() {
 
   // Store the current date for overdue calculation
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [popupOpen, setPopupOpen] = useState(false);
+const [popupData, setPopupData] = useState([]);
+const [popupType, setPopupType] = useState("");
+const [popupFilters, setPopupFilters] = useState({
+  search: "",
+  department: "all",
+  name: "all",
+});
 
   // New state for date range filtering
   const [dateRange, setDateRange] = useState({
@@ -59,6 +70,35 @@ export default function AdminDashboard() {
     pendingTasks: 0,
     overdueTasks: 0,
     completionRate: 0
+  });
+
+  const handleCardClick = (type) => {
+  setPopupType(type);
+  let filteredTasks = [];
+  if (type === "total") filteredTasks = departmentData.allTasks;
+  else if (type === "completed") filteredTasks = departmentData.allTasks.filter(task => task.status === "completed");
+  else if (type === "pending") filteredTasks = departmentData.allTasks.filter(task => task.status === "pending");
+  else if (type === "overdue") filteredTasks = departmentData.allTasks.filter(task => task.status === "overdue");
+  // add more types as needed
+  setPopupData(filteredTasks);
+  setPopupFilters({ search: "", department: "all", name: "all" });
+  setPopupOpen(true);
+};
+
+// Popup filter change
+const handlePopupFilterChange = (filterType, value) => {
+  setPopupFilters(prev => ({ ...prev, [filterType]: value }));
+};
+
+const getFilteredPopupData = () =>
+  popupData.filter(task => {
+    const searchMatch =
+      !popupFilters.search ||
+      (task.title && task.title.toLowerCase().includes(popupFilters.search.toLowerCase())) ||
+      (task.id && task.id.toString().includes(popupFilters.search));
+    const deptMatch = popupFilters.department === "all" || task.department === popupFilters.department;
+    const nameMatch = popupFilters.name === "all" || task.assignedTo === popupFilters.name;
+    return searchMatch && deptMatch && nameMatch;
   });
 
   // Helper function to format date from ISO format to DD/MM/YYYY
@@ -242,7 +282,7 @@ export default function AdminDashboard() {
     return dateStr
   }
 
-  // Modified fetch function to support both checklist and delegation
+  
 // Modified fetch function to support both checklist and delegation
 const fetchDepartmentData = async () => {
   // For delegation mode, always use "DELEGATION" sheet
@@ -596,17 +636,17 @@ const fetchDepartmentData = async () => {
     }).filter(task => task !== null);
 
     // Debug: Log processing summary
-    console.log(`Processing summary for ${sheetName}:`);
-    console.log(`  Dashboard type: ${dashboardType}`);
-    console.log(`  Total rows in sheet: ${data.table.rows.length}`);
-    console.log(`  Rows after filtering: ${processedRows.length}`);
-    console.log(`  Total tasks counted: ${totalTasks}`);
-    console.log(`  Completed tasks: ${completedTasks}`);
-    console.log(`  Pending tasks: ${pendingTasks}`);
-    console.log(`  Overdue tasks: ${overdueTasks}`);
-    console.log(`  Completed Rating 1: ${completedRatingOne}`);
-    console.log(`  Completed Rating 2: ${completedRatingTwo}`);
-    console.log(`  Completed Rating 3+: ${completedRatingThreePlus}`);
+    // console.log(`Processing summary for ${sheetName}:`);
+    // console.log(`  Dashboard type: ${dashboardType}`);
+    // console.log(`  Total rows in sheet: ${data.table.rows.length}`);
+    // console.log(`  Rows after filtering: ${processedRows.length}`);
+    // console.log(`  Total tasks counted: ${totalTasks}`);
+    // console.log(`  Completed tasks: ${completedTasks}`);
+    // console.log(`  Pending tasks: ${pendingTasks}`);
+    // console.log(`  Overdue tasks: ${overdueTasks}`);
+    // console.log(`  Completed Rating 1: ${completedRatingOne}`);
+    // console.log(`  Completed Rating 2: ${completedRatingTwo}`);
+    // console.log(`  Completed Rating 3+: ${completedRatingThreePlus}`);
 
     // Calculate completion rate
     const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
@@ -702,6 +742,23 @@ const fetchDepartmentData = async () => {
 
     return true;
   });
+
+
+  // Yeh state se pehle nai, render function ke start me likho
+const getFilteredStats = () => {
+  const filtered = departmentData.allTasks.filter(task => {
+    const deptMatch = filterDepartment === "all" || task.department === filterDepartment;
+    const nameMatch = filterName === "all" || task.assignedTo === filterName;
+    return deptMatch && nameMatch;
+  });
+  const total = filtered.length;
+  const completed = filtered.filter(t => t.status === "completed").length;
+  const pending = filtered.filter(t => t.status === "pending").length;
+  const overdue = filtered.filter(t => t.status === "overdue").length;
+  return { total, completed, pending, overdue };
+};
+const displayStats = getFilteredStats();
+
 
   // Get tasks by view with date-based filtering - modified upcoming for delegation
   const getTasksByView = (view) => {
@@ -897,82 +954,76 @@ const fetchDepartmentData = async () => {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-lg border border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-all bg-white">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-tr-lg p-4">
-              <h3 className="text-sm font-medium text-blue-700">Total Tasks</h3>
-              <ListTodo className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-blue-700">{departmentData.totalTasks}</div>
-              <p className="text-xs text-blue-600">
-                {dashboardType === "delegation"
-                  ? "All tasks in delegation sheet"
-                  : "Total tasks in checklist (up to today)"
-                }
-              </p>
-            </div>
-          </div>
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+  {/* Total Tasks Card */}
+  <div
+    className="rounded-lg border border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-all bg-white cursor-pointer"
+    onClick={() => handleCardClick("total")}
+  >
+    <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-tr-lg p-4">
+      <h3 className="text-sm font-medium text-blue-700">Total Tasks</h3>
+      <ListTodo className="h-4 w-4 text-blue-500" />
+    </div>
+    <div className="p-4">
+      <div className="text-3xl font-bold text-blue-700">{displayStats.total}</div>
+      <p className="text-xs text-blue-600">
+        Total tasks in checklist up to today
+      </p>
+    </div>
+  </div>
 
-          <div className="rounded-lg border border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-all bg-white">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-green-50 to-green-100 rounded-tr-lg p-4">
-              <h3 className="text-sm font-medium text-green-700">
-                {dashboardType === "delegation" ? "Completed Once" : "Completed Tasks"}
-              </h3>
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-green-700">
-                {dashboardType === "delegation" ? departmentData.completedRatingOne : departmentData.completedTasks}
-              </div>
-              <p className="text-xs text-green-600">
-                {dashboardType === "delegation" ? "Tasks completed once" : "Total completed till date"}
-              </p>
-            </div>
-          </div>
+  {/* Completed Tasks Card */}
+  <div
+    className="rounded-lg border border-l-4 border-l-green-500 shadow-md hover:shadow-lg transition-all bg-white cursor-pointer"
+    onClick={() => handleCardClick("completed")}
+  >
+    <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-green-50 to-green-100 rounded-tr-lg p-4">
+      <h3 className="text-sm font-medium text-green-700">Completed Tasks</h3>
+      <CheckCircle2 className="h-4 w-4 text-green-500" />
+    </div>
+    <div className="p-4">
+      <div className="text-3xl font-bold text-green-700">{displayStats.completed}</div>
+      <p className="text-xs text-green-600">
+        Total completed till date
+      </p>
+    </div>
+  </div>
 
-          <div className="rounded-lg border border-l-4 border-l-amber-500 shadow-md hover:shadow-lg transition-all bg-white">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-amber-50 to-amber-100 rounded-tr-lg p-4">
-              <h3 className="text-sm font-medium text-amber-700">
-                {dashboardType === "delegation" ? "Completed Twice" : "Pending Tasks"}
-              </h3>
-              {dashboardType === "delegation" ? (
-                <CheckCircle2 className="h-4 w-4 text-amber-500" />
-              ) : (
-                <Clock className="h-4 w-4 text-amber-500" />
-              )}
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-amber-700">
-                {dashboardType === "delegation" ? departmentData.completedRatingTwo : departmentData.pendingTasks}
-              </div>
-              <p className="text-xs text-amber-600">
-                {dashboardType === "delegation" ? "Tasks completed twice" : "Including today + overdue"}
-              </p>
-            </div>
-          </div>
+  {/* Pending Tasks Card */}
+  <div
+    className="rounded-lg border border-l-4 border-l-amber-500 shadow-md hover:shadow-lg transition-all bg-white cursor-pointer"
+    onClick={() => handleCardClick("pending")}
+  >
+    <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-amber-50 to-amber-100 rounded-tr-lg p-4">
+      <h3 className="text-sm font-medium text-amber-700">Pending Tasks</h3>
+      <Clock className="h-4 w-4 text-amber-500" />
+    </div>
+    <div className="p-4">
+      <div className="text-3xl font-bold text-amber-700">{displayStats.pending}</div>
+      <p className="text-xs text-amber-600">
+        Including today + overdue
+      </p>
+    </div>
+  </div>
 
-          <div className="rounded-lg border border-l-4 border-l-red-500 shadow-md hover:shadow-lg transition-all bg-white">
-            <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-red-50 to-red-100 rounded-tr-lg p-4">
-              <h3 className="text-sm font-medium text-red-700">
-                {dashboardType === "delegation" ? "Completed 3+ Times" : "Overdue Tasks"}
-              </h3>
-              {dashboardType === "delegation" ? (
-                <CheckCircle2 className="h-4 w-4 text-red-500" />
-              ) : (
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-              )}
-            </div>
-            <div className="p-4">
-              <div className="text-3xl font-bold text-red-700">
-                {dashboardType === "delegation" ? departmentData.completedRatingThreePlus : departmentData.overdueTasks}
-              </div>
-              <p className="text-xs text-red-600">
-                {dashboardType === "delegation" ? "Tasks completed 3+ times" : "Past due (excluding today)"}
-              </p>
-            </div>
-          </div>
-        </div>
+  {/* Overdue Tasks Card */}
+  <div
+    className="rounded-lg border border-l-4 border-l-red-500 shadow-md hover:shadow-lg transition-all bg-white cursor-pointer"
+    onClick={() => handleCardClick("overdue")}
+  >
+    <div className="flex flex-row items-center justify-between space-y-0 pb-2 bg-gradient-to-r from-red-50 to-red-100 rounded-tr-lg p-4">
+      <h3 className="text-sm font-medium text-red-700">Overdue Tasks</h3>
+      <AlertTriangle className="h-4 w-4 text-red-500" />
+    </div>
+    <div className="p-4">
+      <div className="text-3xl font-bold text-red-700">{displayStats.overdue}</div>
+      <p className="text-xs text-red-600">
+        Past due excluding today
+      </p>
+    </div>
+  </div>
+</div>
+
 
         {/* Task Navigation Tabs - Restored to 3 tabs for both modes */}
         <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -1587,6 +1638,107 @@ const fetchDepartmentData = async () => {
             </div>
           )}
         </div>
+       {popupOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white rounded-md shadow-xl w-full max-w-2xl md:max-w-3xl lg:max-w-4xl h-auto max-h-[85vh] flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex justify-between items-center px-4 py-3 border-b bg-purple-50">
+        <h2 className="text-base md:text-lg font-semibold text-purple-800">
+          {/* Popup Title */}
+          {popupType.charAt(0).toUpperCase() + popupType.slice(1)} Tasks Details
+        </h2>
+        <button
+          onClick={() => setPopupOpen(false)}
+          className="text-gray-400 hover:text-gray-700 p-1 rounded transition"
+        >
+          <X className="h-6 w-6" />
+        </button>
+      </div>
+      {/* Filters */}
+      <div className="px-4 py-3 border-b bg-gray-50 flex flex-wrap gap-2 items-center">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={popupFilters.search}
+          onChange={e => handlePopupFilterChange("search", e.target.value)}
+          className="text-xs px-2 py-1 border border-purple-200 rounded"
+        />
+        <select
+          value={popupFilters.department}
+          onChange={e => handlePopupFilterChange("department", e.target.value)}
+          className="text-xs border border-purple-200 rounded p-1"
+        >
+          <option value="all">All Departments</option>
+          {Array.from(new Set(popupData.map(task => task.department).filter(Boolean))).map(dept => (
+            <option key={dept} value={dept}>{dept}</option>
+          ))}
+        </select>
+        <select
+          value={popupFilters.name}
+          onChange={e => handlePopupFilterChange("name", e.target.value)}
+          className="text-xs border border-purple-200 rounded p-1"
+        >
+          <option value="all">All Names</option>
+          {Array.from(new Set(popupData.map(task => task.assignedTo).filter(Boolean))).map(name => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => setPopupFilters({ search: "", department: "all", name: "all" })}
+          className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded"
+        >
+          <X className="inline h-3 w-3" /> Clear
+        </button>
+      </div>
+      {/* Table/Desktop */}
+      <div className="flex-1 overflow-auto hidden md:block">
+        <div className="overflow-x-auto max-h-[50vh]">
+          <table className="min-w-full text-xs md:text-sm text-left">
+            <thead className="bg-purple-100 sticky top-0 z-10 text-purple-800">
+              <tr>
+                <th className="p-2">ID</th>
+                <th className="p-2">Department</th>
+                <th className="p-2">Name</th>
+                <th className="p-2">Title</th>
+                <th className="p-2">Start Date</th>
+                <th className="p-2">Frequency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {getFilteredPopupData().map(task => (
+                <tr key={task.id} className="border-b">
+                  <td className="p-2">{task.id}</td>
+                  <td className="p-2">{task.department}</td>
+                  <td className="p-2">{task.assignedTo}</td>
+                  <td className="p-2">{task.title}</td>
+                  <td className="p-2">{task.taskStartDate}</td>
+                  <td className="p-2">{task.frequency}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Cards/Mobile */}
+      <div className="md:hidden space-y-3 p-3 max-h-[60vh] overflow-y-auto">
+        {getFilteredPopupData().map(task => (
+          <div key={task.id} className="bg-white border border-gray-200 rounded shadow-sm p-2 text-xs">
+            <div><b>ID:</b> {task.id}</div>
+            <div><b>Dept:</b> {task.department}</div>
+            <div><b>Name:</b> {task.assignedTo}</div>
+            <div><b>Title:</b> {task.title}</div>
+            <div><b>Date:</b> {task.taskStartDate}</div>
+            <div><b>Freq:</b> {task.frequency}</div>
+          </div>
+        ))}
+        {getFilteredPopupData().length === 0 && (
+          <div className="text-center py-5 text-gray-400">No Data Found</div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
     </AdminLayout>
   )
