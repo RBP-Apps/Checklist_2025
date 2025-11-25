@@ -520,10 +520,11 @@ const fetchDepartmentData = async () => {
       if (rowIndex <= 5) {
         console.log(`Row ${rowIndex + 1}: status="${status}", completionDate="${completionDate}", dashboardType="${dashboardType}"`);
       }
-
+const department = getCellValue(row, 2);
       // Create the task object
       const taskObj = {
         id: taskIdStr,
+        department,
         title: taskDescription,
         assignedTo,
         taskStartDate,
