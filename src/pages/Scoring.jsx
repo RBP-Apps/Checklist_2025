@@ -119,21 +119,20 @@ const isDateInRange = (dateStr, startDateFilter, endDateFilter) => {
     setUsername(user || "")
   }, [])
 
-  // Fetch scoring data from Google Sheet using the same pattern as your existing code
   const fetchScoringData = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-
+  
       const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?sheet=${CONFIG.SHEET_NAME}&action=fetch`)
       
       if (!response.ok) {
         throw new Error(`Failed to fetch data: ${response.status}`)
       }
-
+  
       const text = await response.text()
       let data
-
+  
       try {
         data = JSON.parse(text)
       } catch (parseError) {
@@ -146,51 +145,53 @@ const isDateInRange = (dateStr, startDateFilter, endDateFilter) => {
           throw new Error("Invalid JSON response from server")
         }
       }
-
+  
       const currentUsername = sessionStorage.getItem("username")
       const currentUserRole = sessionStorage.getItem("role")
       const scores = []
       const membersSet = new Set()
-
+  
       let rows = []
       if (data.table && data.table.rows) {
         rows = data.table.rows
       } else if (Array.isArray(data)) {
         rows = data
       }
-
+  
       rows.forEach((row, rowIndex) => {
         if (rowIndex === 0) return // Skip header row
-
+  
         let rowValues = []
         if (row.c) {
           rowValues = row.c.map((cell) => (cell && cell.v !== undefined ? cell.v : ""))
         } else if (Array.isArray(row)) {
           rowValues = row
         }
-
+  
         const scoreData = {
-            _id: `score_${rowIndex}`,
-            dateStart: parseGoogleSheetsDate(rowValues[0]) || "", // Column A - Date Start
-            dateEnd: parseGoogleSheetsDate(rowValues[1]) || "",   // Column B - Date End
-            name: rowValues[2] || "",                             // Column C - Name
-            target: parseFloat(rowValues[3]) || 0,                // Column D - Target
-            achievement: parseFloat(rowValues[4]) || 0,           // Column E - Achievement
-            overallScorePercent: parseFloat(rowValues[5]) || 0,   // Column F - Overall Score %
-            notDoneOnTime: parseFloat(rowValues[6]) || 0,         // Column G - Overall Score Not Done on Time
-            totalPending: parseInt(rowValues[7]) || 0             // Column H - Total Pending
-            }
-
+          _id: `score_${rowIndex}`,
+          dateStart: parseGoogleSheetsDate(rowValues[0]) || "",
+          dateEnd: parseGoogleSheetsDate(rowValues[1]) || "",
+          name: rowValues[2] || "",
+          target: parseFloat(rowValues[3]) || 0,
+          achievement: parseFloat(rowValues[4]) || 0,
+          overallScorePercent: parseFloat(rowValues[5]) || 0,
+          notDoneOnTime: parseFloat(rowValues[6]) || 0,
+          totalPending: parseInt(rowValues[7]) || 0
+        }
+  
         membersSet.add(scoreData.name)
-
-        // Filter based on user role
-        const isUserMatch = currentUserRole === "admin" || scoreData.name.toLowerCase() === currentUsername.toLowerCase()
-        
-        if (isUserMatch || currentUserRole === "admin") {
+  
+        // Filter based on user role - UPDATED LOGIC
+        if (currentUserRole === "admin") {
+          // Admin can see all data
+          scores.push(scoreData)
+        } else if (currentUserRole === "user" && scoreData.name.toLowerCase() === currentUsername.toLowerCase()) {
+          // User can only see their own data (matching name from Scoring sheet Column C)
           scores.push(scoreData)
         }
       })
-
+  
       setScoringData(scores)
       setMembersList(Array.from(membersSet).sort())
       setLoading(false)
