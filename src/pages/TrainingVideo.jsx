@@ -43,30 +43,34 @@ const HelpVideo = () => {
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 bg-gradient-to-r from-red-500 to-purple-500 rounded-lg">
-                                    <Video className="h-6 w-6 text-white" />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold text-gray-800">Help Video</h1>
-                                    <p className="text-gray-600 mt-1">
-                                        Video tutorial and guidance for using the system
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-2 shadow-sm">
-                                {userRole === "admin" ? (
-                                    <Users className="h-5 w-5 text-blue-600" />
-                                ) : (
-                                    <User className="h-5 w-5 text-green-600" />
-                                )}
-                                <span className="text-sm font-medium text-gray-700">
-                                    {username} ({userRole === "admin" ? "Admin" : "User"})
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    {/* Left: title + description */}
+    <div className="flex items-start gap-3">
+      <div className="p-3 bg-gradient-to-r from-red-500 to-purple-500 rounded-lg">
+        <Video className="h-6 w-6 text-white" />
+      </div>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Help Video</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">
+          Video tutorial and guidance for using the system
+        </p>
+      </div>
+    </div>
+
+    {/* Right: user info */}
+    <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-2 shadow-sm self-start sm:self-auto">
+      {userRole === "admin" ? (
+        <Users className="h-5 w-5 text-blue-600" />
+      ) : (
+        <User className="h-5 w-5 text-green-600" />
+      )}
+      <span className="text-sm font-medium text-gray-700">
+        {username} ({userRole === "admin" ? "Admin" : "User"})
+      </span>
+    </div>
+  </div>
+</div>
+
 
                     {/* Help Video Content */}
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden">

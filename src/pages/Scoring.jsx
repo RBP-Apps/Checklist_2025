@@ -323,22 +323,26 @@ const isDateInRange = (dateStr, startDateFilter, endDateFilter) => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <BarChart3 className="h-8 w-8 text-purple-600 mr-3" />
-              {CONFIG.PAGE_CONFIG.title}
-            </h1>
-            <p className="text-gray-600 mt-1">{CONFIG.PAGE_CONFIG.description}</p>
-          </div>
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </button>
-        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+
+<div>
+  <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+    <BarChart3 className="h-8 w-8 text-purple-600 mr-3" />
+    {CONFIG.PAGE_CONFIG.title}
+  </h1>
+  <p className="text-gray-600 mt-1 max-w-md">{CONFIG.PAGE_CONFIG.description}</p>
+</div>
+
+<button
+  onClick={() => window.history.back()}
+  className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+>
+  <ArrowLeft className="h-4 w-4 mr-2" />
+  Back
+</button>
+
+</div>
+
 
         {/* Filters */}
         <div className="bg-white p-6 rounded-lg shadow-md">
@@ -460,113 +464,126 @@ const isDateInRange = (dateStr, startDateFilter, endDateFilter) => {
           </div>
         </div>
 
-        {/* Performance Leaderboard */}
         <div className="bg-white rounded-lg shadow-md">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Trophy className="h-5 w-5 text-purple-600 mr-2" />
-              Performance Leaderboard
-            </h2>
-          </div>
+      <div className="px-6 py-4 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+          <Trophy className="h-5 w-5 text-purple-600 mr-2" />
+          Performance Leaderboard
+        </h2>
+      </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    S.No
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Target
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Achievement
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Overall Score
-                  </th>
-                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Overall Score Not Done on Time
-                    </th>
-
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Pending
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {performanceMetrics.sortedScores.length > 0 ? (
-                  performanceMetrics.sortedScores.map((score, index) => {
-                    const achievementStatus = getAchievementStatus(score.target, score.achievement)
-                    return (
-                      <tr key={score._id} className="hover:bg-gray-50">
-                         <td className="px-6 py-4 whitespace-nowrap">
-                         <div className="flex items-center">
-                         <span className="text-sm font-medium text-gray-900">{index + 1}</span>
-                             </div>
-                                </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{score.name}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {score.dateStart} - {score.dateEnd}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{score.target}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{score.achievement}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getScoreColor(score.overallScorePercent)}`}>
-                            {score.overallScorePercent}%
-                          </span>
-                        </td>
-                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                                          {score.notDoneOnTime}
-                                    </div>
-                                    </td>
-
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${achievementStatus.color}`}>
-                            {achievementStatus.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {score.totalPending > 0 ? (
-                              <span className="text-red-600 font-medium">{score.totalPending}</span>
-                            ) : (
-                              <span className="text-green-600">0</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
-                      No scoring data available for the selected criteria
+      {/* Desktop and tablet: table view */}
+      <div className="overflow-x-auto hidden sm:block">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Period</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Achievement</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Score</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overall Score Not Done on Time</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {performanceMetrics.sortedScores.length > 0 ? (
+              performanceMetrics.sortedScores.map((score, index) => {
+                const achievementStatus = getAchievementStatus(score.target, score.achievement)
+                return (
+                  <tr key={score._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <span className="text-sm font-medium text-gray-900">{index + 1}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{score.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{score.dateStart} - {score.dateEnd}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{score.target}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{score.achievement}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getScoreColor(score.overallScorePercent)}`}>
+                        {score.overallScorePercent}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{score.notDoneOnTime}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${achievementStatus.color}`}>
+                        {achievementStatus.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {score.totalPending > 0 ? (
+                          <span className="text-red-600 font-medium">{score.totalPending}</span>
+                        ) : (
+                          <span className="text-green-600">0</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                )
+              })
+            ) : (
+              <tr>
+                <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                  No scoring data available for the selected criteria
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile: card view */}
+      <div className="sm:hidden space-y-4 p-4">
+        {performanceMetrics.sortedScores.length > 0 ? (
+          performanceMetrics.sortedScores.map((score, index) => {
+            const achievementStatus = getAchievementStatus(score.target, score.achievement)
+            return (
+              <div key={score._id} className="bg-white p-4 rounded-lg shadow hover:shadow-md">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900">#{index + 1} - {score.name}</h3>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getScoreColor(score.overallScorePercent)}`}>
+                    {score.overallScorePercent}%
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 mb-1">Period: {score.dateStart} - {score.dateEnd}</p>
+                <p className="text-xs text-gray-600 mb-1">Target: {score.target}</p>
+                <p className="text-xs text-gray-600 mb-1">Achievement: {score.achievement}</p>
+                <p className="text-xs text-gray-600 mb-1">Not Done on Time: {score.notDoneOnTime}</p>
+                <p className="text-xs font-semibold mb-1">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${achievementStatus.color}`}>
+                    {achievementStatus.status}
+                  </span>
+                </p>
+                <p className="text-xs">
+                  Pending: {score.totalPending > 0 ? (
+                    <span className="text-red-600 font-medium">{score.totalPending}</span>
+                  ) : (
+                    <span className="text-green-600">0</span>
+                  )}
+                </p>
+              </div>
+            )
+          })
+        ) : (
+          <p className="text-center text-gray-500">No scoring data available for the selected criteria</p>
+        )}
+      </div>
+    </div>
       </div>
     </AdminLayout>
   )

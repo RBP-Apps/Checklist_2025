@@ -636,18 +636,7 @@ const department = getCellValue(row, 2);
       return taskObj;
     }).filter(task => task !== null);
 
-    // Debug: Log processing summary
-    // console.log(`Processing summary for ${sheetName}:`);
-    // console.log(`  Dashboard type: ${dashboardType}`);
-    // console.log(`  Total rows in sheet: ${data.table.rows.length}`);
-    // console.log(`  Rows after filtering: ${processedRows.length}`);
-    // console.log(`  Total tasks counted: ${totalTasks}`);
-    // console.log(`  Completed tasks: ${completedTasks}`);
-    // console.log(`  Pending tasks: ${pendingTasks}`);
-    // console.log(`  Overdue tasks: ${overdueTasks}`);
-    // console.log(`  Completed Rating 1: ${completedRatingOne}`);
-    // console.log(`  Completed Rating 2: ${completedRatingTwo}`);
-    // console.log(`  Completed Rating 3+: ${completedRatingThreePlus}`);
+    
 
     // Calculate completion rate
     const completionRate = totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0;
@@ -797,19 +786,7 @@ const displayStats = getFilteredStats();
     return viewFilteredTasks;
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-500 hover:bg-green-600 text-white"
-      case "pending":
-        return "bg-amber-500 hover:bg-amber-600 text-white"
-      case "overdue":
-        return "bg-red-500 hover:bg-red-600 text-white"
-      default:
-        return "bg-gray-500 hover:bg-gray-600 text-white"
-    }
-  }
-
+  
   const getFrequencyColor = (frequency) => {
     switch (frequency) {
       case "one-time":
@@ -865,31 +842,21 @@ const displayStats = getFilteredStats();
     )
   }
 
-  // Staff Tasks Table Component
-  const StaffTasksTable = () => {
-    return (
-      <div className="rounded-md border border-gray-200 overflow-x-auto">
+ const StaffTasksTable = () => {
+  return (
+    <>
+      {/* Table visible on medium and larger screens */}
+      <div className="hidden md:block rounded-md border border-gray-200 overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total Tasks
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Completed
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Pending
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Progress
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
+              {/* Header cells unchanged */}
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Tasks</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completed</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -914,17 +881,11 @@ const displayStats = getFilteredStats();
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {staff.progress >= 80 ? (
-                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Excellent
-                    </span>
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Excellent</span>
                   ) : staff.progress >= 60 ? (
-                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      Good
-                    </span>
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">Good</span>
                   ) : (
-                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Needs Improvement
-                    </span>
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Needs Improvement</span>
                   )}
                 </td>
               </tr>
@@ -932,8 +893,54 @@ const displayStats = getFilteredStats();
           </tbody>
         </table>
       </div>
-    );
-  };
+
+      {/* Card layout visible on small screens */}
+      <div className="md:hidden space-y-4">
+        {departmentData.staffMembers.map((staff) => (
+          <div key={staff.id} className="border rounded-md p-4 bg-white shadow-sm">
+            <div className="text-sm font-semibold text-gray-900">{staff.name}</div>
+            <div className="text-xs text-gray-500 mb-2">{staff.email}</div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
+              <div>
+                <span className="font-medium">Total Tasks:</span> {staff.totalTasks}
+              </div>
+              <div>
+                <span className="font-medium">Completed:</span> {staff.completedTasks}
+              </div>
+              <div>
+                <span className="font-medium">Pending:</span> {staff.pendingTasks}
+              </div>
+              <div>
+                <span className="font-medium">Progress:</span> {staff.progress}%
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${staff.progress}%` }}></div>
+              </div>
+              <div className="mt-1 text-xs font-semibold">
+                {staff.progress >= 80 ? (
+                  <span className="text-green-800 bg-green-100 px-2 py-1 rounded-full inline-block">
+                    Excellent
+                  </span>
+                ) : staff.progress >= 60 ? (
+                  <span className="text-yellow-800 bg-yellow-100 px-2 py-1 rounded-full inline-block">
+                    Good
+                  </span>
+                ) : (
+                  <span className="text-red-800 bg-red-100 px-2 py-1 rounded-full inline-block">
+                    Needs Improvement
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
+
 
   return (
     <AdminLayout>
@@ -1026,116 +1033,189 @@ const displayStats = getFilteredStats();
 </div>
 
 
-        {/* Task Navigation Tabs - Restored to 3 tabs for both modes */}
-        <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="grid grid-cols-3">
-            <button
-              className={`py-3 text-center font-medium transition-colors ${taskView === "recent" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              onClick={() => setTaskView("recent")}
-            >
-              Recent Tasks
-            </button>
-            <button
-              className={`py-3 text-center font-medium transition-colors ${taskView === "upcoming" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              onClick={() => setTaskView("upcoming")}
-            >
-              Upcoming Tasks
-            </button>
-            <button
-              className={`py-3 text-center font-medium transition-colors ${taskView === "overdue" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              onClick={() => setTaskView("overdue")}
-            >
-              Overdue Tasks
-            </button>
-          </div>
+ <div className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white">
+  {/* Tabs for task view */}
+  <div className="grid grid-cols-3">
+    <button
+      className={`py-3 text-center font-medium transition-colors ${
+        taskView === "recent"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+      }`}
+      onClick={() => setTaskView("recent")}
+    >
+      Recent Tasks
+    </button>
+    <button
+      className={`py-3 text-center font-medium transition-colors ${
+        taskView === "upcoming"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+      }`}
+      onClick={() => setTaskView("upcoming")}
+    >
+      Upcoming Tasks
+    </button>
+    <button
+      className={`py-3 text-center font-medium transition-colors ${
+        taskView === "overdue"
+          ? "bg-blue-600 text-white"
+          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+      }`}
+      onClick={() => setTaskView("overdue")}
+    >
+      Overdue Tasks
+    </button>
+  </div>
 
-          <div className="p-4">
-            <div className="flex flex-col gap-4 md:flex-row mb-4">
-              <div className="flex-1 space-y-2">
-                <label htmlFor="search" className="flex items-center text-purple-700">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Search Tasks
-                </label>
-                <input
-                  id="search"
-                  placeholder="Search by task title or ID"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                />
-              </div>
-              <div className="space-y-2 md:w-[180px]">
-                <label htmlFor="staff-filter" className="flex items-center text-purple-700">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter by Staff
-                </label>
-                <select
-                  id="staff-filter"
-                  value={filterStaff}
-                  onChange={(e) => setFilterStaff(e.target.value)}
-                  className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+  {/* Filters and Search */}
+  <div className="p-4">
+    <div className="flex flex-col gap-4 md:flex-row mb-4">
+      <div className="flex-1 space-y-2">
+        <label htmlFor="search" className="flex items-center text-purple-700">
+          <Filter className="h-4 w-4 mr-2" />
+          Search Tasks
+        </label>
+        <input
+          id="search"
+          placeholder="Search by task title or ID"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+        />
+      </div>
+      <div className="space-y-2 md:w-[180px]">
+        <label htmlFor="staff-filter" className="flex items-center text-purple-700">
+          <Filter className="h-4 w-4 mr-2" />
+          Filter by Staff
+        </label>
+        <select
+          id="staff-filter"
+          value={filterStaff}
+          onChange={(e) => setFilterStaff(e.target.value)}
+          className="w-full rounded-md border border-purple-200 p-2 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+        >
+          <option value="all">All Staff</option>
+          {departmentData.staffMembers.map((staff) => (
+            <option key={staff.id} value={staff.name}>
+              {staff.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {/* Content Area: Table on md+, Cards on mobile */}
+    {getTasksByView(taskView).length === 0 ? (
+      <div className="text-center p-8 text-gray-500">
+        <p>No tasks found matching your filters.</p>
+      </div>
+    ) : (
+      <>
+        {/* Table view for medium screens and above */}
+        <div
+          className="hidden md:block overflow-x-auto"
+          style={{ maxHeight: "400px", overflowY: "auto" }}
+        >
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  <option value="all">All Staff</option>
-                  {departmentData.staffMembers.map((staff) => (
-                    <option key={staff.id} value={staff.name}>
-                      {staff.name}
-                    </option>
-                  ))}
-                </select>
+                  Task ID
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Task Description
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Assigned To
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Task Start Date
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Frequency
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {getTasksByView(taskView).map((task) => (
+                <tr key={task.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {task.title}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {task.assignedTo}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {task.taskStartDate}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getFrequencyColor(
+                        task.frequency
+                      )}`}
+                    >
+                      {task.frequency.charAt(0).toUpperCase() + task.frequency.slice(1)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Card view for small screens */}
+        <div
+          className="md:hidden space-y-4 overflow-y-auto"
+          style={{ maxHeight: "400px" }}
+        >
+          {getTasksByView(taskView).map((task) => (
+            <div key={task.id} className="border rounded-md p-4 bg-white shadow-sm">
+              <div className="text-sm font-semibold text-gray-900 mb-1">{task.title}</div>
+              <div className="text-xs text-gray-500 mb-2">ID: {task.id}</div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
+                <div>
+                  <span className="font-medium">Assigned To:</span> {task.assignedTo}
+                </div>
+                <div>
+                  <span className="font-medium">Start Date:</span> {task.taskStartDate}
+                </div>
+                <div>
+                  <span className="font-medium">Frequency:</span>{" "}
+                  <span
+                    className={`px-2 py-1 rounded-full font-medium ${getFrequencyColor(
+                      task.frequency
+                    )}`}
+                  >
+                    {task.frequency.charAt(0).toUpperCase() + task.frequency.slice(1)}
+                  </span>
+                </div>
               </div>
             </div>
-
-            {getTasksByView(taskView).length === 0 ? (
-              <div className="text-center p-8 text-gray-500">
-                <p>No tasks found matching your filters.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto" style={{ maxHeight: "400px", overflowY: "auto" }}>
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task ID
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task Description
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assigned To
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task Start Date
-                      </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Frequency
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getTasksByView(taskView).map((task) => (
-                      <tr key={task.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.title}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.assignedTo}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.taskStartDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getFrequencyColor(task.frequency)}`}
-                          >
-                            {task.frequency.charAt(0).toUpperCase() + task.frequency.slice(1)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          ))}
         </div>
+      </>
+    )}
+  </div>
+</div>
+
+
 
         <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-1">
           <div className="rounded-lg border border-l-4 border-l-indigo-500 shadow-md hover:shadow-lg transition-all bg-white">
@@ -1211,15 +1291,16 @@ const displayStats = getFilteredStats();
                   </div>
                 </div>
               </div>
-              <div className="rounded-lg border border-purple-200 shadow-md bg-white">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4">
-                  <h3 className="text-purple-700 font-medium">Staff Task Summary</h3>
-                  <p className="text-purple-600 text-sm">Overview of tasks assigned to each staff member</p>
-                </div>
-                <div className="p-4">
-                  <StaffTasksTable />
-                </div>
-              </div>
+             <div className="rounded-lg border border-purple-200 shadow-md bg-white relative max-h-[500px] flex flex-col">
+  <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-100 p-4 sticky top-0 z-20">
+    <h3 className="text-purple-700 font-medium">Staff Task Summary</h3>
+    <p className="text-purple-600 text-sm">Overview of tasks assigned to each staff member</p>
+  </div>
+  <div className="p-4 overflow-y-auto flex-1">
+    <StaffTasksTable />
+  </div>
+</div>
+
             </div>
           )}
 

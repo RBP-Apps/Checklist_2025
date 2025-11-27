@@ -967,17 +967,14 @@ const handleSelectAllItems = useCallback(
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* STICKY HEADER SECTION */}
-       <div className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+<div className="bg-white border-b border-gray-200 shadow-sm">
   <div className="px-4 py-4 sm:px-6 lg:px-8">
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-
       <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-purple-700 text-center sm:text-left">
         {showHistory ? CONFIG.PAGE_CONFIG.historyTitle : CONFIG.PAGE_CONFIG.title}
       </h1>
 
       <div className="flex flex-col sm:flex-row sm:space-x-4 gap-3 sm:gap-0">
-
         {/* Search */}
         <div className="relative w-full sm:w-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -1027,6 +1024,7 @@ const handleSelectAllItems = useCallback(
     </div>
   </div>
 </div>
+
 
 
         {/* MAIN CONTENT SECTION - SCROLLABLE */}
@@ -1095,466 +1093,863 @@ const handleSelectAllItems = useCallback(
               <>
                 {/* Simplified History Filters - Only Date Range */}
                 <div className="p-4 border-b border-purple-100 bg-gray-50">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                      <div className="mb-2 flex items-center">
-                        <span className="text-sm font-medium text-purple-700">Filter by Date Range:</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center">
-                          <label htmlFor="start-date" className="text-sm text-gray-700 mr-1">
-                            From
-                          </label>
-                          <input
-                            id="start-date"
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="text-sm border border-gray-200 rounded-md p-1"
-                          />
-                        </div>
-                        <div className="flex items-center">
-                          <label htmlFor="end-date" className="text-sm text-gray-700 mr-1">
-                            To
-                          </label>
-                          <input
-                            id="end-date"
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="text-sm border border-gray-200 rounded-md p-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <span className="text-sm font-medium text-purple-700 mb-1 sm:mb-0">
+        Filter by Date Range:
+      </span>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center gap-1">
+          <label htmlFor="start-date" className="text-sm text-gray-700">
+            From
+          </label>
+          <input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="text-sm border border-gray-200 rounded-md p-1 w-full sm:w-auto"
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          <label htmlFor="end-date" className="text-sm text-gray-700">
+            To
+          </label>
+          <input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="text-sm border border-gray-200 rounded-md p-1 w-full sm:w-auto"
+          />
+        </div>
+      </div>
+    </div>
 
-                    {(startDate || endDate || searchTerm) && (
-                      <button
-                        onClick={resetFilters}
-                        className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm"
-                      >
-                        Clear All Filters
-                      </button>
-                    )}
-                  </div>
-                </div>
+    {(startDate || endDate || searchTerm) && (
+      <button
+        onClick={resetFilters}
+        className="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 text-sm w-full sm:w-auto"
+      >
+        Clear All Filters
+      </button>
+    )}
+  </div>
+</div>
+
 
                 {/* History Table */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Timestamp
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Task ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Task
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                           ATTACHED FILE
-                          </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Next Target Date
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Remarks
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Uploaded Image
-                        </th>
-                        {userRole === "admin" && (
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            User
-                          </th>
-                        )}
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Given By
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredHistoryData.length > 0 ? (
-                        filteredHistoryData.map((history) => (
-                          <tr key={history._id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{history["col0"] || "-"}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{history["col1"] || "-"}</div>
-                            </td>
-
-                            <td className="px-6 py-4 min-w-[250px]">
-                            <div
-                              className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
-                              title={history["col8"]}
-                            >
-                              {history["col8"] || "-"}
-                            </div>
-                          </td>
-                          {/* NEW ATTACHED FILE COLUMN */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {history["col19"] ? (
-                              <a
-                                href={history["col19"]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
-                              >
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                                View File
-                              </a>
-                            ) : (
-                              <span className="text-sm text-gray-400">-</span>
-                            )}
-                          </td>
-
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${history["col2"] === "Done"
-                                  ? "bg-green-100 text-green-800"
-                                  : history["col2"] === "Extend date"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-gray-100 text-gray-800"
-                                  }`}
-                              >
-                                {history["col2"] || "-"}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{formatDateForDisplay(history["col3"]) || "-"}</div>
-                            </td>
-                            <td className="px-6 py-4 bg-purple-50 min-w-[200px]">
-                              <div
-                                className="text-sm text-gray-900 max-w-md whitespace-normal break-words"
-                                title={history["col4"]}
-                              >
-                                {history["col4"] || "-"}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {history["col5"] ? (
-                                <a
-                                  href={history["col5"]}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 hover:text-blue-800 underline flex items-center"
-                                >
-                                  <img
-                                    src={history["col5"] || "/api/placeholder/32/32"}
-                                    alt="Attachment"
-                                    className="h-8 w-8 object-cover rounded-md mr-2"
-                                  />
-                                  View
-                                </a>
-                              ) : (
-                                <span className="text-gray-400">No attachment</span>
-                              )}
-                            </td>
-                            {userRole === "admin" && (
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm text-gray-900">{history["col7"] || "-"}</div>
-                              </td>
-                            )}
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{history["col9"] || "-"}</div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={userRole === "admin" ? 9 : 8} className="px-6 py-4 text-center text-gray-500">
-                            {searchTerm || startDate || endDate
-                              ? "No historical records matching your filters"
-                              : "No completed records found"}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : (
-              /* Regular Tasks Table */
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-  <tr>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      <input
-        type="checkbox"
-        className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-        checked={filteredAccountData.length > 0 && 
-                 selectedItems.size === filteredAccountData.filter(item => !item.isDisabled).length}
-        onChange={handleSelectAllItems}
-      />
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Task ID
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Status
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Department
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Given By
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Name
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Task Description
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      ATTACHED FILE
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Task Start Date
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Planned Date
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Action Status
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Next Target Date
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Remarks
-    </th>
-    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      Upload Image
-    </th>
-  </tr>
-</thead>
-
- <tbody className="bg-white divide-y divide-gray-200">
-  {filteredAccountData.length > 0 ? (
-    filteredAccountData.map((account) => {
-      const isSelected = selectedItems.has(account._id)
-      const rowColorClass = getRowColor(account["col17"])
-      const isDisabled = account.isDisabled
-      const isComplete = account.status === "Complete"
-      
-      return (
-        <tr key={account._id} className={`${isSelected ? "bg-purple-50" : ""} hover:bg-gray-50 ${rowColorClass} ${isDisabled ? "opacity-70 bg-gray-50" : ""}`}>
-          
-          {/* Checkbox */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              checked={isSelected}
-              disabled={isDisabled}
-              onChange={(e) => handleCheckboxClick(e, account._id)}
-            />
+             <div className="overflow-x-auto">
+  {/* Table for medium and larger screens */}
+  <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ATTACHED FILE</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Next Target Date</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remarks</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Uploaded Image</th>
+        {userRole === "admin" && (
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+        )}
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Given By</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
+      {filteredHistoryData.length > 0 ? (
+        filteredHistoryData.map((history) => (
+          <tr key={history._id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="text-sm font-medium text-gray-900">{history["col0"] || "-"}</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="text-sm text-gray-900">{history["col1"] || "-"}</div>
+            </td>
+            <td className="px-6 py-4 min-w-[250px]">
+              <div className="text-sm text-gray-900 max-w-md whitespace-normal break-words" title={history["col8"]}>
+                {history["col8"] || "-"}
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              {history["col19"] ? (
+                <a
+                  href={history["col19"]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  View File
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">-</span>
+              )}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                history["col2"] === "Done" ? "bg-green-100 text-green-800" :
+                history["col2"] === "Extend date" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"
+              }`}>
+                {history["col2"] || "-"}
+              </span>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="text-sm text-gray-900">{formatDateForDisplay(history["col3"]) || "-"}</div>
+            </td>
+            <td className="px-6 py-4 bg-purple-50 min-w-[200px]">
+              <div className="text-sm text-gray-900 max-w-md whitespace-normal break-words" title={history["col4"]}>
+                {history["col4"] || "-"}
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              {history["col5"] ? (
+                <a
+                  href={history["col5"]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                >
+                  <img
+                    src={history["col5"] || "/api/placeholder/32/32"}
+                    alt="Attachment"
+                    className="h-8 w-8 object-cover rounded-md mr-2"
+                  />
+                  View
+                </a>
+              ) : (
+                <span className="text-gray-400">No attachment</span>
+              )}
+            </td>
+            {userRole === "admin" && (
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{history["col7"] || "-"}</div>
+              </td>
+            )}
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="text-sm text-gray-900">{history["col9"] || "-"}</div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={userRole === "admin" ? 9 : 8} className="px-6 py-4 text-center text-gray-500">
+            {searchTerm || startDate || endDate
+              ? "No historical records matching your filters"
+              : "No completed records found"}
           </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
 
-          {/* Task ID - col1 */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col1"] || "-"}</div>
-          </td>
-
-          {/* Status */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${isComplete ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-              {account.status}
-            </span>
-          </td>
-
-          {/* Department - col2 */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col2"] || "-"}</div>
-          </td>
-
-          {/* Given By - col3 */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col3"] || "-"}</div>
-          </td>
-
-          {/* Name - col4 */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            <div className="text-sm text-gray-900">{account["col4"] || "-"}</div>
-          </td>
-
-          {/* Task Description - col5 */}
-          <td className="px-6 py-4 min-w-[250px]">
-            <div className="text-sm text-gray-900 max-w-md whitespace-normal break-words" title={account["col5"]}>
-              {account["col5"] || "-"}
-            </div>
-          </td>
-
-          {/* Attached File - col19 */}
-          <td className="px-6 py-4 whitespace-nowrap">
-            {account["col19"] ? (
-              <a href={account["col19"]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline">
+  {/* Cards for small/mobile screens */}
+  <div className="sm:hidden space-y-4">
+    {filteredHistoryData.length > 0 ? (
+      filteredHistoryData.map((history) => (
+        <div
+          key={history._id}
+          className="bg-white p-4 rounded-lg shadow border border-gray-200"
+        >
+          <div className="text-sm font-semibold text-gray-700 mb-1">{history["col0"] || "-"}</div>
+          <div className="text-sm text-gray-900 mb-1">
+            <span className="font-medium">Task ID:</span> {history["col1"] || "-"}
+          </div>
+          <div className="text-sm text-gray-900 mb-1" title={history["col8"]}>
+            <span className="font-medium">Task:</span> {history["col8"] || "-"}
+          </div>
+          <div className="mb-1">
+            <span className="font-medium text-sm block">Attached File:</span>
+            {history["col19"] ? (
+              <a
+                href={history["col19"]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
+              >
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
                 View File
               </a>
             ) : (
-              <span className="text-sm text-gray-400">No Attachement</span>
+              <span className="text-gray-400">-</span>
             )}
-          </td>
-
-          {/* Task Start Date - col0 (DATE COLUMN) */}
-          <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-yellow-50" : ""}`}>
-            <div className="text-sm text-gray-900">{formatDateForDisplay(account["col0"])}</div>
-          </td>
-
-          {/* Planned Date - col6 (DATE COLUMN) */}
-          <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-yellow-50" : ""}`}>
-            <div className="text-sm text-gray-900">{formatDateForDisplay(account["col6"])}</div>
-          </td>
-
-          {/* Action Status - col7 (FIXED: was showing col6) */}
-          <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-blue-50" : ""}`}>
-            <select
-              disabled={!isSelected}
-              value={statusData[account._id] || ""}
-              onChange={(e) => handleStatusChange(account._id, e.target.value)}
-              className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
-            >
-              <option value="">Select</option>
-              <option value="Done">Done</option>
-              <option value="Extend date">Extend date</option>
-            </select>
-          </td>
-
-          {/* Next Target Date - col10 (DATE COLUMN - FIXED: was showing col7) */}
-          <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-indigo-50" : ""}`}>
-            <input
-              type="date"
-              disabled={!isSelected || statusData[account._id] !== "Extend date"}
-              value={nextTargetDate[account._id] ? (() => {
-                const dateStr = nextTargetDate[account._id];
-                if (dateStr && dateStr.includes("/")) {
-                  const [day, month, year] = dateStr.split("/");
-                  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-                }
-                return dateStr;
-              })() : ""}
-              onChange={(e) => {
-                const inputDate = e.target.value;
-                if (inputDate) {
-                  const [year, month, day] = inputDate.split("-");
-                  const formattedDate = `${day}/${month}/${year}`;
-                  handleNextTargetDateChange(account._id, formattedDate);
-                } else {
-                  handleNextTargetDateChange(account._id, "");
-                }
-              }}
-              className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-          </td>
-
-          {/* Remarks - col8 (FIXED: was showing col10) */}
-          <td className={`px-6 py-4 whitespace-nowrap ${!account["col17"] ? "bg-purple-50" : ""}`}>
-            <input
-              type="text"
-              placeholder="Enter remarks"
-              disabled={!isSelected}
-              value={remarksData[account._id] || ""}
-              onChange={(e) => setRemarksData(prev => ({ ...prev, [account._id]: e.target.value }))}
-              className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
-            />
-          </td>
-
-        
-<td className="px-6 py-4 whitespace-nowrap">
-  {isComplete ? (
-    account.historyImage ? (
-      <a href={account.historyImage} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline flex items-center">
-        <img src={account.historyImage} alt="Attachment" className="h-8 w-8 object-cover rounded-md mr-2" />
-        View
-      </a>
+          </div>
+          <div className="mb-1">
+            <span className="font-medium">Status:</span>{" "}
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              history["col2"] === "Done" ? "bg-green-100 text-green-800" :
+              history["col2"] === "Extend date" ? "bg-yellow-100 text-yellow-800" : "bg-gray-100 text-gray-800"
+            }`}>
+              {history["col2"] || "-"}
+            </span>
+          </div>
+          <div className="mb-1">
+            <span className="font-medium">Next Target Date:</span> {formatDateForDisplay(history["col3"]) || "-"}
+          </div>
+          <div className="mb-1" title={history["col4"]}>
+            <span className="font-medium">Remarks:</span> {history["col4"] || "-"}
+          </div>
+          <div className="mb-1">
+            <span className="font-medium text-sm block">Uploaded Image:</span>
+            {history["col5"] ? (
+              <a
+                href={history["col5"]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-800 underline flex items-center"
+              >
+                <img
+                  src={history["col5"] || "/api/placeholder/32/32"}
+                  alt="Attachment"
+                  className="h-8 w-8 object-cover rounded-md mr-2"
+                />
+                View
+              </a>
+            ) : (
+              <span className="text-gray-400">No attachment</span>
+            )}
+          </div>
+          {userRole === "admin" && (
+            <div className="mb-1">
+              <span className="font-medium">User:</span> {history["col7"] || "-"}
+            </div>
+          )}
+          <div>
+            <span className="font-medium">Given By:</span> {history["col9"] || "-"}
+          </div>
+        </div>
+      ))
     ) : (
-      <span className="text-gray-400">No attachment</span>
-    )
-  ) : account.image ? (
-    <div className="flex items-center">
-      <img src={typeof account.image === "string" ? account.image : URL.createObjectURL(account.image)} alt="Receipt" className="h-10 w-10 object-cover rounded-md mr-2" />
-      <div className="flex flex-col">
-        <span className="text-xs text-gray-500">
-          {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
-        </span>
-        {account.image instanceof File ? (
-          <span className="text-xs text-green-600">Ready to upload</span>
-        ) : (
-          <button className="text-xs text-purple-600 hover:text-purple-800" onClick={() => window.open(account.image, "_blank")}>
-            View Full Image
-          </button>
-        )}
+      <div className="text-center text-gray-500 py-6 text-sm">
+        {searchTerm || startDate || endDate
+          ? "No historical records matching your filters"
+          : "No completed records found"}
       </div>
-    </div>
-  ) : (
-    <div className="flex flex-col gap-2">
-      {/* File Upload Button */}
-      <label
-        htmlFor={`upload-${account._id}`}
-        className={`flex items-center cursor-pointer ${
-          account["col9"]?.toUpperCase() === "YES" ? "text-red-600 font-medium" : "text-purple-600 hover:text-purple-800"
-        } ${isDisabled ? "pointer-events-none opacity-50" : ""}`}
-      >
-        <Upload className="h-4 w-4 mr-1" />
-        <span className="text-xs">
-          {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Image"}
-          {account["col9"]?.toUpperCase() === "YES" && <span className="text-red-500 ml-1">*</span>}
-        </span>
-      </label>
+    )}
+  </div>
+</div>
 
-      <input
-        id={`upload-${account._id}`}
-        type="file"
-        className="hidden"
-        accept="image/*"
-        capture="environment"
-        onChange={(e) => handleImageUpload(account._id, e)}
-        disabled={!isSelected || isDisabled}
-      />
+              </>
+            ) : (
+              /* Regular Tasks Table */
+<div className="overflow-x-auto">
 
-      {/* Camera Capture Button */}
-      <button
-        onClick={() => {
-          setCurrentCaptureId(account._id);
-          startCamera();
-        }}
-        disabled={!isSelected || isDisabled || isCameraLoading}
-        className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Camera className="h-4 w-4 mr-1" />
-        <span>
-          {isCameraLoading ? "Loading..." : "Take Photo"}
-        </span>
-      </button>
-    </div>
-  )}
-</td>
+  {/* Desktop & Tablet Table (visible from sm breakpoint) */}
+  <table className="min-w-full divide-y divide-gray-200 text-xs md:text-sm hidden sm:table">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+          <input
+            type="checkbox"
+            className="h-4 w-4 md:h-5 md:w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            checked={
+              filteredAccountData.length > 0 &&
+              selectedItems.size ===
+                filteredAccountData.filter((item) => !item.isDisabled).length
+            }
+            onChange={handleSelectAllItems}
+          />
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Task ID
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+          Status
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Department
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Given By
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+          Name
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
+          Task Description
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+          ATTACHED FILE
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+          Task Start Date
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Planned Date
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Action Status
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+          Next Target Date
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+          Remarks
+        </th>
+        <th className="px-3 md:px-6 py-2 md:py-3 text-left font-medium text-gray-500 uppercase tracking-wider">
+          Upload Image
+        </th>
+      </tr>
+    </thead>
+
+    <tbody className="bg-white divide-y divide-gray-200">
+      {filteredAccountData.length > 0 ? (
+        filteredAccountData.map((account) => {
+          const isSelected = selectedItems.has(account._id);
+          const rowColorClass = getRowColor(account["col17"]);
+          const isDisabled = account.isDisabled;
+          const isComplete = account.status === "Complete";
+
+          return (
+            <tr
+              key={account._id}
+              className={`${
+                isSelected ? "bg-purple-50" : ""
+              } hover:bg-gray-50 ${rowColorClass} ${
+                isDisabled ? "opacity-70 bg-gray-50" : ""
+              }`}
+            >
+              {/* Checkbox */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 md:h-5 md:w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  checked={isSelected}
+                  disabled={isDisabled}
+                  onChange={(e) => handleCheckboxClick(e, account._id)}
+                />
+              </td>
+
+              {/* Task ID */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell">
+                <div className="text-sm text-gray-900">
+                  {account["col1"] || "-"}
+                </div>
+              </td>
+
+              {/* Status */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    isComplete
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {account.status}
+                </span>
+              </td>
+
+              {/* Department */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell">
+                <div className="text-sm text-gray-900">{account["col2"] || "-"}</div>
+              </td>
+
+              {/* Given By */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell">
+                <div className="text-sm text-gray-900">{account["col3"] || "-"}</div>
+              </td>
+
+              {/* Name */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                <div className="text-sm text-gray-900">{account["col4"] || "-"}</div>
+              </td>
+
+              {/* Task Description */}
+              <td className="px-3 md:px-6 py-2 md:py-4 min-w-[150px] max-w-md whitespace-normal break-words">
+                <div className="text-sm text-gray-900" title={account["col5"]}>
+                  {account["col5"] || "-"}
+                </div>
+              </td>
+
+              {/* Attached File */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                {account["col19"] ? (
+                  <a
+                    href={account["col19"]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    View File
+                  </a>
+                ) : (
+                  <span className="text-sm text-gray-400">No Attachment</span>
+                )}
+              </td>
+
+              {/* Task Start Date */}
+              <td
+                className={`px-3 md:px-6 py-2 md:py-4 whitespace-nowrap ${
+                  !account["col17"] ? "bg-yellow-50" : ""
+                }`}
+              >
+                <div className="text-sm text-gray-900">{formatDateForDisplay(account["col0"])}</div>
+              </td>
+
+              {/* Planned Date */}
+              <td
+                className={`px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell ${
+                  !account["col17"] ? "bg-yellow-50" : ""
+                }`}
+              >
+                <div className="text-sm text-gray-900">{formatDateForDisplay(account["col6"])}</div>
+              </td>
+
+              {/* Action Status */}
+              <td
+                className={`px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell ${
+                  !account["col17"] ? "bg-blue-50" : ""
+                }`}
+              >
+                <select
+                  disabled={!isSelected}
+                  value={statusData[account._id] || ""}
+                  onChange={(e) => handleStatusChange(account._id, e.target.value)}
+                  className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select</option>
+                  <option value="Done">Done</option>
+                  <option value="Extend date">Extend date</option>
+                </select>
+              </td>
+
+              {/* Next Target Date */}
+              <td
+                className={`px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden sm:table-cell ${
+                  !account["col17"] ? "bg-indigo-50" : ""
+                }`}
+              >
+                <input
+                  type="date"
+                  disabled={!isSelected || statusData[account._id] !== "Extend date"}
+                  value={
+                    nextTargetDate[account._id]
+                      ? (() => {
+                          const dateStr = nextTargetDate[account._id];
+                          if (dateStr && dateStr.includes("/")) {
+                            const [day, month, year] = dateStr.split("/");
+                            return `${year}-${month.padStart(2, "0")}-${day.padStart(
+                              2,
+                              "0"
+                            )}`;
+                          }
+                          return dateStr;
+                        })()
+                      : ""
+                  }
+                  onChange={(e) => {
+                    const inputDate = e.target.value;
+                    if (inputDate) {
+                      const [year, month, day] = inputDate.split("-");
+                      const formattedDate = `${day}/${month}/${year}`;
+                      handleNextTargetDateChange(account._id, formattedDate);
+                    } else {
+                      handleNextTargetDateChange(account._id, "");
+                    }
+                  }}
+                  className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </td>
+
+              {/* Remarks */}
+              <td
+                className={`px-3 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell ${
+                  !account["col17"] ? "bg-purple-50" : ""
+                }`}
+              >
+                <input
+                  type="text"
+                  placeholder="Enter remarks"
+                  disabled={!isSelected}
+                  value={remarksData[account._id] || ""}
+                  onChange={(e) =>
+                    setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))
+                  }
+                  className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </td>
+
+              {/* Upload Image */}
+              <td className="px-3 md:px-6 py-2 md:py-4 whitespace-nowrap w-[160px]">
+                {isComplete ? (
+                  account.historyImage ? (
+                    <a
+                      href={account.historyImage}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                    >
+                      <img
+                        src={account.historyImage}
+                        alt="Attachment"
+                        className="h-8 w-8 object-cover rounded-md mr-2"
+                      />
+                      View
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">No attachment</span>
+                  )
+                ) : account.image ? (
+                  <div className="flex items-center">
+                    <img
+                      src={
+                        typeof account.image === "string"
+                          ? account.image
+                          : URL.createObjectURL(account.image)
+                      }
+                      alt="Receipt"
+                      className="h-10 w-10 object-cover rounded-md mr-2"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500">
+                        {account.image instanceof File
+                          ? account.image.name
+                          : "Uploaded Receipt"}
+                      </span>
+                      {account.image instanceof File ? (
+                        <span className="text-xs text-green-600">Ready to upload</span>
+                      ) : (
+                        <button
+                          className="text-xs text-purple-600 hover:text-purple-800"
+                          onClick={() => window.open(account.image, "_blank")}
+                        >
+                          View Full Image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <label
+                      htmlFor={`upload-${account._id}`}
+                      className={`flex items-center cursor-pointer ${
+                        account["col9"]?.toUpperCase() === "YES"
+                          ? "text-red-600 font-medium"
+                          : "text-purple-600 hover:text-purple-800"
+                      } ${isDisabled ? "pointer-events-none opacity-50" : ""}`}
+                    >
+                      <Upload className="h-4 w-4 mr-1" />
+                      <span className="text-xs">
+                        {account["col9"]?.toUpperCase() === "YES"
+                          ? "Required Upload"
+                          : "Upload Image"}
+                        {account["col9"]?.toUpperCase() === "YES" && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </span>
+                    </label>
+
+                    <input
+                      id={`upload-${account._id}`}
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => handleImageUpload(account._id, e)}
+                      disabled={!isSelected || isDisabled}
+                    />
+
+                    <button
+                      onClick={() => {
+                        setCurrentCaptureId(account._id);
+                        startCamera();
+                      }}
+                      disabled={!isSelected || isDisabled || isCameraLoading}
+                      className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Camera className="h-4 w-4 mr-1" />
+                      <span>{isCameraLoading ? "Loading..." : "Take Photo"}</span>
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td
+            colSpan={14}
+            className="px-6 py-4 text-center text-gray-500 text-sm md:text-base"
+          >
+            {searchTerm || statusFilter !== "all"
+              ? "No tasks matching your filters"
+              : "No pending tasks found"}
+          </td>
         </tr>
-      )
-    })
-  ) : (
-    <tr>
-      <td colSpan="14" className="px-6 py-4 text-center text-gray-500">
-        {searchTerm || statusFilter !== "all" ? "No tasks matching your filters" : "No pending tasks found"}
-      </td>
-    </tr>
-  )}
-</tbody>
+      )}
+    </tbody>
+  </table>
 
-                </table>
-              </div>
+  {/* Mobile Cards (visible on screens below sm breakpoint) */}
+  <div className="sm:hidden space-y-4">
+    {filteredAccountData.length > 0 ? (
+      filteredAccountData.map((account) => {
+        const isSelected = selectedItems.has(account._id);
+        const isDisabled = account.isDisabled;
+        const isComplete = account.status === "Complete";
+
+        return (
+          <div
+            key={account._id}
+            className={`bg-white p-4 rounded-md shadow border ${
+              isSelected ? "border-purple-500 bg-purple-50" : "border-gray-200"
+            } opacity-${isDisabled ? "70" : "100"}`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <input
+                type="checkbox"
+                className="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                checked={isSelected}
+                disabled={isDisabled}
+                onChange={(e) => handleCheckboxClick(e, account._id)}
+              />
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                  isComplete
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                }`}
+              >
+                {account.status}
+              </span>
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Task ID: </span>
+              {account["col1"] || "-"}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Department: </span>
+              {account["col2"] || "-"}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Given By: </span>
+              {account["col3"] || "-"}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Name: </span>
+              {account["col4"] || "-"}
+            </div>
+
+            <div className="text-sm mb-1 whitespace-normal break-words max-w-full">
+              <span className="font-medium">Task Description: </span>
+              {account["col5"] || "-"}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Attached File: </span>
+              {account["col19"] ? (
+                <a
+                  href={account["col19"]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  View File
+                </a>
+              ) : (
+                <span className="text-gray-400">No Attachment</span>
+              )}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Task Start Date: </span>
+              {formatDateForDisplay(account["col0"])}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Planned Date: </span>
+              {formatDateForDisplay(account["col6"])}
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Action Status: </span>
+              <select
+                disabled={!isSelected}
+                value={statusData[account._id] || ""}
+                onChange={(e) => handleStatusChange(account._id, e.target.value)}
+                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">Select</option>
+                <option value="Done">Done</option>
+                <option value="Extend date">Extend date</option>
+              </select>
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Next Target Date: </span>
+              <input
+                type="date"
+                disabled={!isSelected || statusData[account._id] !== "Extend date"}
+                value={
+                  nextTargetDate[account._id]
+                    ? (() => {
+                        const dateStr = nextTargetDate[account._id];
+                        if (dateStr && dateStr.includes("/")) {
+                          const [day, month, year] = dateStr.split("/");
+                          return `${year}-${month.padStart(2, "0")}-${day.padStart(
+                            2,
+                            "0"
+                          )}`;
+                        }
+                        return dateStr;
+                      })()
+                    : ""
+                }
+                onChange={(e) => {
+                  const inputDate = e.target.value;
+                  if (inputDate) {
+                    const [year, month, day] = inputDate.split("-");
+                    const formattedDate = `${day}/${month}/${year}`;
+                    handleNextTargetDateChange(account._id, formattedDate);
+                  } else {
+                    handleNextTargetDateChange(account._id, "");
+                  }
+                }}
+                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            <div className="text-sm mb-1">
+              <span className="font-medium">Remarks: </span>
+              <input
+                type="text"
+                placeholder="Enter remarks"
+                disabled={!isSelected}
+                value={remarksData[account._id] || ""}
+                onChange={(e) =>
+                  setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))
+                }
+                className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            <div className="text-sm">
+              <span className="font-medium">Upload Image: </span>
+              {isComplete ? (
+                account.historyImage ? (
+                  <a
+                    href={account.historyImage}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                  >
+                    <img
+                      src={account.historyImage}
+                      alt="Attachment"
+                      className="h-8 w-8 object-cover rounded-md mr-2"
+                    />
+                    View
+                  </a>
+                ) : (
+                  <span className="text-gray-400">No attachment</span>
+                )
+              ) : account.image ? (
+                <div className="flex items-center">
+                  <img
+                    src={
+                      typeof account.image === "string"
+                        ? account.image
+                        : URL.createObjectURL(account.image)
+                    }
+                    alt="Receipt"
+                    className="h-10 w-10 object-cover rounded-md mr-2"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500">
+                      {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
+                    </span>
+                    {account.image instanceof File ? (
+                      <span className="text-xs text-green-600">Ready to upload</span>
+                    ) : (
+                      <button
+                        className="text-xs text-purple-600 hover:text-purple-800"
+                        onClick={() => window.open(account.image, "_blank")}
+                      >
+                        View Full Image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor={`upload-${account._id}`}
+                    className={`flex items-center cursor-pointer ${
+                      account["col9"]?.toUpperCase() === "YES"
+                        ? "text-red-600 font-medium"
+                        : "text-purple-600 hover:text-purple-800"
+                    } ${isDisabled ? "pointer-events-none opacity-50" : ""}`}
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    <span className="text-xs">
+                      {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Image"}
+                      {account["col9"]?.toUpperCase() === "YES" && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
+                    </span>
+                  </label>
+
+                  <input
+                    id={`upload-${account._id}`}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => handleImageUpload(account._id, e)}
+                    disabled={!isSelected || isDisabled}
+                  />
+
+                  <button
+                    onClick={() => {
+                      setCurrentCaptureId(account._id);
+                      startCamera();
+                    }}
+                    disabled={!isSelected || isDisabled || isCameraLoading}
+                    className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Camera className="h-4 w-4 mr-1" />
+                    <span>{isCameraLoading ? "Loading..." : "Take Photo"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })
+    ) : (
+      <div className="text-center text-gray-500 text-sm md:text-base py-6">
+        {searchTerm || statusFilter !== "all"
+          ? "No tasks matching your filters"
+          : "No pending tasks found"}
+      </div>
+    )}
+  </div>
+</div>
+
+
             )}
           </div>
         </div>

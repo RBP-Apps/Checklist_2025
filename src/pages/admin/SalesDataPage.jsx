@@ -928,51 +928,52 @@ const capturePhoto = async () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-purple-700">
-            {showHistory ? CONFIG.PAGE_CONFIG.historyTitle : CONFIG.PAGE_CONFIG.title}
-          </h1>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+  <h1 className="text-2xl font-bold tracking-tight text-purple-700">
+    {showHistory ? CONFIG.PAGE_CONFIG.historyTitle : CONFIG.PAGE_CONFIG.title}
+  </h1>
 
-          <div className="flex space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder={showHistory ? "Search history..." : "Search tasks..."}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
+  <div className="flex flex-col sm:flex-row sm:space-x-4 gap-3 w-full sm:w-auto">
+    <div className="relative w-full sm:w-auto">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+      <input
+        type="text"
+        placeholder={showHistory ? "Search history..." : "Search tasks..."}
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="pl-10 pr-4 py-2 border border-purple-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+      />
+    </div>
 
-            <button
-              onClick={toggleHistory}
-              className="rounded-md bg-gradient-to-r from-blue-500 to-indigo-600 py-2 px-4 text-white hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              {showHistory ? (
-                <div className="flex items-center">
-                  <ArrowLeft className="h-4 w-4 mr-1" />
-                  <span>Back to Tasks</span>
-                </div>
-              ) : (
-                <div className="flex items-center">
-                  <History className="h-4 w-4 mr-1" />
-                  <span>View History</span>
-                </div>
-              )}
-            </button>
-
-            {!showHistory && (
-              <button
-                onClick={handleSubmit}
-                disabled={selectedItemsCount === 0 || isSubmitting}
-                className="rounded-md bg-gradient-to-r from-purple-600 to-pink-600 py-2 px-4 text-white hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? "Processing..." : `Submit Selected (${selectedItemsCount})`}
-              </button>
-            )}
-          </div>
+    <button
+      onClick={toggleHistory}
+      className="rounded-md bg-gradient-to-r from-blue-500 to-indigo-600 py-2 px-4 text-white hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
+    >
+      {showHistory ? (
+        <div className="flex items-center justify-center">
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          <span>Back to Tasks</span>
         </div>
+      ) : (
+        <div className="flex items-center justify-center">
+          <History className="h-4 w-4 mr-1" />
+          <span>View History</span>
+        </div>
+      )}
+    </button>
+
+    {!showHistory && (
+      <button
+        onClick={handleSubmit}
+        disabled={selectedItemsCount === 0 || isSubmitting}
+        className="rounded-md bg-gradient-to-r from-purple-600 to-pink-600 py-2 px-4 text-white hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+      >
+        {isSubmitting ? "Processing..." : `Submit Selected (${selectedItemsCount})`}
+      </button>
+    )}
+  </div>
+</div>
+
 
         {successMessage && (
           <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md flex items-center justify-between">
@@ -1170,163 +1171,143 @@ const capturePhoto = async () => {
                 </div>
               </div>
 
-              {/* History Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Project
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Given By
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task Description
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                           ATTACHED FILE
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-yellow-50">
-                        Task Start Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Freq
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Enable Reminders
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Require Attachment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">
-                        Actual Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-purple-50">
-                        Remarks
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Attachment
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredHistoryData.length > 0 ? (
-                      filteredHistoryData.map((history) => (
-                        <tr key={history._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{history["col1"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col2"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col3"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col4"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 max-w-xs" title={history["col5"]}>
-                              {history["col5"] || "—"}
-                            </div>
-                          </td>
-                          {/* NEW ATTACHED FILE COLUMN */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {history["col15"] ? (
-                              <a
-                                href={history["col15"]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
-                              >
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                                View File
-                              </a>
-                            ) : (
-                              <span className="text-sm text-gray-400">—</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap bg-yellow-50">
-                            <div className="text-sm text-gray-900">{history["col6"] || "—"}</div>
-                          </td>
+ {/* History Table */}
+<div className="overflow-x-auto">
+  {/* Table for sm and above */}
+  <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Given By</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Description</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ATTACHED FILE</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-yellow-50">Task Start Date</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Freq</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enable Reminders</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Require Attachment</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">Actual Date</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">Status</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-purple-50">Remarks</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attachment</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
+      {filteredHistoryData.length > 0 ? (
+        filteredHistoryData.map((history) => (
+          <tr key={history._id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="text-sm font-medium text-gray-900">{history["col1"] || "—"}</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col2"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col3"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col4"] || "—"}</div></td>
+            <td className="px-6 py-4"><div className="text-sm text-gray-900 max-w-xs" title={history["col5"]}>{history["col5"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              {history["col15"] ? (
+                <a href={history["col15"]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                  View File
+                </a>
+              ) : (
+                <span className="text-sm text-gray-400">—</span>
+              )}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap bg-yellow-50"><div className="text-sm text-gray-900">{history["col6"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col7"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col8"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{history["col9"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap bg-green-50"><div className="text-sm font-medium text-gray-900">{history["col10"] || "—"}</div></td>
+            <td className="px-6 py-4 whitespace-nowrap bg-blue-50">
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                history["col12"] === "Yes" ? "bg-green-100 text-green-800" :
+                history["col12"] === "No" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"
+              }`}>{history["col12"] || "—"}</span>
+            </td>
+            <td className="px-6 py-4 bg-purple-50">
+              <div className="text-sm text-gray-900 max-w-xs" title={history["col13"]}>{history["col13"] || "—"}</div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              {history["col14"] ? (
+                <a href={history["col14"]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline flex items-center">
+                  <img src={history["col14"] || "/placeholder.svg?height=32&width=32"} alt="Attachment" className="h-8 w-8 object-cover rounded-md mr-2" />
+                  View
+                </a>
+              ) : (
+                <span className="text-gray-400">No attachment</span>
+              )}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={13} className="px-6 py-4 text-center text-gray-500">
+            {searchTerm || selectedMembers.length > 0 || selectedGivenBy.length > 0 || selectedNames.length > 0 || startDate || endDate
+              ? "No historical records matching your filters"
+              : "No completed records found"}
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
 
-                          <td className="px-6 py-4 whitespace-nowrap bg-yellow-50">
-                            <div className="text-sm text-gray-900">{history["col6"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col7"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col8"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{history["col9"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap bg-green-50">
-                            <div className="text-sm font-medium text-gray-900">{history["col10"] || "—"}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap bg-blue-50">
-                            <span
-                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${history["col12"] === "Yes"
-                                ? "bg-green-100 text-green-800"
-                                : history["col12"] === "No"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
-                                }`}
-                            >
-                              {history["col12"] || "—"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 bg-purple-50">
-                            <div className="text-sm text-gray-900 max-w-xs" title={history["col13"]}>
-                              {history["col13"] || "—"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {history["col14"] ? (
-                              <a
-                                href={history["col14"]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline flex items-center"
-                              >
-                                <img
-                                  src={history["col14"] || "/placeholder.svg?height=32&width=32"}
-                                  alt="Attachment"
-                                  className="h-8 w-8 object-cover rounded-md mr-2"
-                                />
-                                View
-                              </a>
-                            ) : (
-                              <span className="text-gray-400">No attachment</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                    <td colSpan={14} className="px-6 py-4 text-center text-gray-500">
-                          {searchTerm || selectedMembers.length > 0 || selectedGivenBy.length > 0 || selectedNames.length > 0 || startDate || endDate
-                            ? "No historical records matching your filters"
-                            : "No completed records found"}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+  {/* Cards for mobile screens */}
+  <div className="sm:hidden space-y-4">
+    {filteredHistoryData.length > 0 ? (
+      filteredHistoryData.map((history) => (
+        <div key={history._id} className="bg-white p-4 rounded-lg shadow border border-gray-200">
+          <div className="text-sm font-semibold text-gray-700 mb-1">Task ID: {history["col1"] || "—"}</div>
+          <div className="text-sm text-gray-900 mb-1">Project: {history["col2"] || "—"}</div>
+          <div className="text-sm text-gray-900 mb-1">Given By: {history["col3"] || "—"}</div>
+          <div className="text-sm text-gray-900 mb-1">Name: {history["col4"] || "—"}</div>
+          <div className="text-sm text-gray-900 mb-1" title={history["col5"]}>Task Description: {history["col5"] || "—"}</div>
+          <div className="text-sm mb-1">
+            Attached File: {history["col15"] ? (
+              <a href={history["col15"]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+                View File
+              </a>
+            ) : (
+              <span className="text-gray-400">—</span>
+            )}
+          </div>
+          <div className="text-sm mb-1 bg-yellow-50 p-1 rounded">Task Start Date: {history["col6"] || "—"}</div>
+          <div className="text-sm mb-1">Freq: {history["col7"] || "—"}</div>
+          <div className="text-sm mb-1">Enable Reminders: {history["col8"] || "—"}</div>
+          <div className="text-sm mb-1">Require Attachment: {history["col9"] || "—"}</div>
+          <div className="text-sm mb-1 bg-green-50 p-1 rounded">Actual Date: {history["col10"] || "—"}</div>
+          <div className="text-sm mb-1 bg-blue-50 p-1 rounded">
+            Status: <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              history["col12"] === "Yes" ? "bg-green-100 text-green-800" :
+              history["col12"] === "No" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"
+            }`}>{history["col12"] || "—"}</span>
+          </div>
+          <div className="text-sm mb-1 bg-purple-50 p-1 rounded" title={history["col13"]}>Remarks: {history["col13"] || "—"}</div>
+          <div className="text-sm">
+            Attachment: {history["col14"] ? (
+              <a href={history["col14"]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline flex items-center">
+                <img src={history["col14"] || "/placeholder.svg?height=32&width=32"} alt="Attachment" className="h-8 w-8 object-cover rounded-md mr-2" />
+                View
+              </a>
+            ) : (
+              <span className="text-gray-400">No attachment</span>
+            )}
+          </div>
+        </div>
+      ))
+    ) : (
+      <div className="text-center text-gray-500 py-6">
+        {searchTerm || selectedMembers.length > 0 || selectedGivenBy.length > 0 || selectedNames.length > 0 || startDate || endDate
+          ? "No historical records matching your filters"
+          : "No completed records found"}
+      </div>
+    )}
+  </div>
+</div>
+
+
             </>
           ) : (
             <>
@@ -1403,278 +1384,331 @@ const capturePhoto = async () => {
                 </div>
               </div>
 
-              {/* Regular Tasks Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                          checked={filteredAccountData.length > 0 && selectedItems.size === filteredAccountData.length}
-                          onChange={handleSelectAllItems}
-                        />
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Project
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Given By
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Task Description
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ATTACHED FILE
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-yellow-50">
-                        Task Start Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Freq
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Enable Reminders
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Require Attachment
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Remarks
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Upload Image
-                      </th>
-                    </tr>
-                  </thead>
-                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredAccountData.length > 0 ? (
-                    filteredAccountData.map((account) => {
-                      const isSelected = selectedItems.has(account._id)
-                      return (
-                        <tr key={account._id} className={`${isSelected ? "bg-purple-50" : ""} hover:bg-gray-50`}>
-                          
-                          {/* Checkbox */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                              checked={isSelected}
-                              onChange={(e) => handleCheckboxClick(e, account._id)}
-                            />
-                          </td>
-
-                          {/* Task ID - col1 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col1"] || "—"}</div>
-                          </td>
-
-                          {/* Project - col2 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col2"] || "—"}</div>
-                          </td>
-
-                          {/* Given By - col3 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col3"] || "—"}</div>
-                          </td>
-
-                          {/* Name - col4 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col4"] || "—"}</div>
-                          </td>
-
-                          {/* Task Description - col5 */}
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 max-w-xs truncate" title={account["col5"]}>
-                              {account["col5"] || "—"}
-                            </div>
-                          </td>
-
-                          {/* ATTACHED FILE - col15 (FIXED: this was missing proper mapping) */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {account["col15"] ? (
-                              <a
-                                href={account["col15"]}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline"
-                              >
-                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                                View File
-                              </a>
-                            ) : (
-                              <span className="text-sm text-gray-400">—</span>
-                            )}
-                          </td>
-
-                          {/* Task Start Date - col6 (DATE COLUMN) */}
-                          <td className="px-6 py-4 whitespace-nowrap bg-yellow-50">
-                            <div className="text-sm text-gray-900">{account["col6"] || "—"}</div>
-                          </td>
-
-                          {/* Freq - col7 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col7"] || "—"}</div>
-                          </td>
-
-                          {/* Enable Reminders - col8 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col8"] || "—"}</div>
-                          </td>
-
-                          {/* Require Attachment - col9 */}
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{account["col9"] || "—"}</div>
-                          </td>
-
-                          {/* Status - (FIXED: Using form dropdown instead of column data) */}
-                          <td className="px-6 py-4 whitespace-nowrap bg-yellow-50">
-                            <select
-                              disabled={!isSelected}
-                              value={additionalData[account._id] || ""}
-                              onChange={(e) => {
-                                setAdditionalData((prev) => ({ ...prev, [account._id]: e.target.value }))
-                                if (e.target.value !== "No") {
-                                  setRemarksData((prev) => {
-                                    const newData = { ...prev }
-                                    delete newData[account._id]
-                                    return newData
-                                  })
-                                }
-                              }}
-                              className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            >
-                              <option value="">Select...</option>
-                              <option value="Yes">Yes</option>
-                              <option value="No">No</option>
-                            </select>
-                          </td>
-
-                          {/* Remarks - (FIXED: Using form input instead of column data) */}
-                          <td className="px-6 py-4 whitespace-nowrap bg-orange-50">
-                            <input
-                              type="text"
-                              placeholder="Enter remarks"
-                              disabled={!isSelected || !additionalData[account._id]}
-                              value={remarksData[account._id] || ""}
-                              onChange={(e) => setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))}
-                              className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                            />
-                          </td>
-
-                       
-<td className="px-3 py-4 bg-green-50 min-w-[120px]">
-  {account.image ? (
-    <div className="flex items-center">
-      <img
-        src={
-          typeof account.image === "string"
-            ? account.image
-            : URL.createObjectURL(account.image)
-        }
-        alt="Receipt"
-        className="h-10 w-10 object-cover rounded-md mr-2 flex-shrink-0"
-      />
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs text-gray-500 break-words">
-          {account.image instanceof File
-            ? account.image.name
-            : "Uploaded Receipt"}
-        </span>
-        {account.image instanceof File ? (
-          <span className="text-xs text-green-600">
-            Ready to upload
-          </span>
-        ) : (
-          <button
-            className="text-xs text-purple-600 hover:text-purple-800 break-words"
-            onClick={() =>
-              window.open(account.image, "_blank")
+           <div className="overflow-x-auto">
+  {/* Desktop Table */}
+  <table className="min-w-full divide-y divide-gray-200 hidden sm:table">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+            checked={
+              filteredAccountData.length > 0 && selectedItems.size === filteredAccountData.length
             }
+            onChange={handleSelectAllItems}
+          />
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task ID</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Given By</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Description</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ATTACHED FILE</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-yellow-50">Task Start Date</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Freq</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Enable Reminders</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Require Attachment</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-yellow-50">Status</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-orange-50">Remarks</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Image</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
+      {filteredAccountData.length > 0 ? (
+        filteredAccountData.map((account) => {
+          const isSelected = selectedItems.has(account._id);
+          return (
+            <tr key={account._id} className={`${isSelected ? "bg-purple-50" : ""} hover:bg-gray-50`}>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  checked={isSelected}
+                  onChange={(e) => handleCheckboxClick(e, account._id)}
+                />
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col1"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col2"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col3"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col4"] || "—"}</div></td>
+              <td className="px-6 py-4"><div className="text-sm text-gray-900 max-w-xs truncate" title={account["col5"]}>{account["col5"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {account["col15"] ? (
+                  <a href={account["col15"]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 underline">
+                    <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                    View File
+                  </a>
+                ) : (
+                  <span className="text-sm text-gray-400">—</span>
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap bg-yellow-50"><div className="text-sm text-gray-900">{account["col6"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col7"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col8"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{account["col9"] || "—"}</div></td>
+              <td className="px-6 py-4 whitespace-nowrap bg-yellow-50">
+                <select
+                  disabled={!isSelected}
+                  value={additionalData[account._id] || ""}
+                  onChange={(e) => {
+                    setAdditionalData((prev) => ({ ...prev, [account._id]: e.target.value }));
+                    if (e.target.value !== "No") {
+                      setRemarksData((prev) => {
+                        const newData = { ...prev };
+                        delete newData[account._id];
+                        return newData;
+                      });
+                    }
+                  }}
+                  className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select...</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap bg-orange-50">
+                <input
+                  type="text"
+                  placeholder="Enter remarks"
+                  disabled={!isSelected || !additionalData[account._id]}
+                  value={remarksData[account._id] || ""}
+                  onChange={(e) => setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))}
+                  className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </td>
+              <td className="px-3 py-4 bg-green-50 min-w-[120px]">
+                {account.image ? (
+                  <div className="flex items-center">
+                    <img
+                      src={typeof account.image === "string" ? account.image : URL.createObjectURL(account.image)}
+                      alt="Receipt"
+                      className="h-10 w-10 object-cover rounded-md mr-2 flex-shrink-0"
+                    />
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs text-gray-500 break-words">
+                        {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
+                      </span>
+                      {account.image instanceof File ? (
+                        <span className="text-xs text-green-600">Ready to upload</span>
+                      ) : (
+                        <button
+                          className="text-xs text-purple-600 hover:text-purple-800 break-words"
+                          onClick={() => window.open(account.image, "_blank")}
+                        >
+                          View Full Image
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {/* File Upload Button */}
+                    <label
+                      htmlFor={`upload-${account._id}`}
+                      className={`flex items-center cursor-pointer ${
+                        account["col9"]?.toUpperCase() === "YES" ? "text-red-600 font-medium" : "text-purple-600"
+                      } hover:text-purple-800`}
+                    >
+                      <Upload className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-xs break-words">
+                        {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Receipt"}
+                        {account["col9"]?.toUpperCase() === "YES" && <span className="text-red-500 ml-1">*</span>}
+                      </span>
+                    </label>
+
+                    <input
+                      id={`upload-${account._id}`}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(account._id, e)}
+                      disabled={!isSelected}
+                    />
+
+                    {/* Camera Capture Button */}
+                    <button
+                      onClick={() => {
+                        setCurrentCaptureId(account._id);
+                        startCamera();
+                      }}
+                      disabled={!isSelected || isCameraLoading}
+                      className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Camera className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span>{isCameraLoading ? "Loading..." : "Take Photo"}</span>
+                    </button>
+                  </div>
+                )}
+              </td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td colSpan={14} className="px-6 py-4 text-center text-gray-500">
+            {searchTerm || selectedGivenBy.length > 0 || selectedNames.length > 0
+              ? "No tasks matching your search or filters"
+              : "No pending tasks found for today, tomorrow, or past due dates"}
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+
+  {/* Mobile Cards */}
+  <div className="sm:hidden space-y-4">
+    {filteredAccountData.length > 0 ? (
+      filteredAccountData.map((account) => {
+        const isSelected = selectedItems.has(account._id);
+        return (
+          <div
+            key={account._id}
+            className={`bg-white p-4 rounded-md shadow border ${
+              isSelected ? "border-purple-500 bg-purple-50" : "border-gray-200"
+            }`}
           >
-            View Full Image
-          </button>
-        )}
+            <div className="flex items-center justify-between mb-2">
+              <input
+                type="checkbox"
+                className="h-5 w-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                checked={isSelected}
+                onChange={(e) => handleCheckboxClick(e, account._id)}
+              />
+            </div>
+
+            <div className="text-sm mb-1 font-medium">Task ID: {account["col1"] || "—"}</div>
+            <div className="text-sm mb-1">Project: {account["col2"] || "—"}</div>
+            <div className="text-sm mb-1">Given By: {account["col3"] || "—"}</div>
+            <div className="text-sm mb-1">Name: {account["col4"] || "—"}</div>
+            <div className="text-sm mb-1" title={account["col5"]}>Task Description: {account["col5"] || "—"}</div>
+            <div className="text-sm mb-1">
+              Attached File:{" "}
+              {account["col15"] ? (
+                <a href={account["col15"]} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+                  View File
+                </a>
+              ) : (
+                <span className="text-gray-400">—</span>
+              )}
+            </div>
+            <div className="text-sm mb-1 bg-yellow-50 p-1 rounded">Task Start Date: {account["col6"] || "—"}</div>
+            <div className="text-sm mb-1">Freq: {account["col7"] || "—"}</div>
+            <div className="text-sm mb-1">Enable Reminders: {account["col8"] || "—"}</div>
+            <div className="text-sm mb-1">Require Attachment: {account["col9"] || "—"}</div>
+
+            <div className="text-sm mb-1 bg-yellow-50 p-1 rounded">
+              Status:{" "}
+              <select
+                disabled={!isSelected}
+                value={additionalData[account._id] || ""}
+                onChange={(e) => {
+                  setAdditionalData((prev) => ({ ...prev, [account._id]: e.target.value }));
+                  if (e.target.value !== "No") {
+                    setRemarksData((prev) => {
+                      const newData = { ...prev };
+                      delete newData[account._id];
+                      return newData;
+                    });
+                  }
+                }}
+                className="border border-gray-300 rounded-md px-2 py-1 w-full disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <option value="">Select...</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <div className="text-sm mb-1 bg-orange-50 p-1 rounded">
+              <input
+                type="text"
+                placeholder="Enter remarks"
+                disabled={!isSelected || !additionalData[account._id]}
+                value={remarksData[account._id] || ""}
+                onChange={(e) => setRemarksData((prev) => ({ ...prev, [account._id]: e.target.value }))}
+                className="border rounded-md px-2 py-1 w-full border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            <div className="text-sm">
+              Upload Image:{" "}
+              {account.image ? (
+                <div className="flex items-center">
+                  <img
+                    src={typeof account.image === "string" ? account.image : URL.createObjectURL(account.image)}
+                    alt="Receipt"
+                    className="h-10 w-10 object-cover rounded-md mr-2 flex-shrink-0"
+                  />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-xs text-gray-500 break-words">
+                      {account.image instanceof File ? account.image.name : "Uploaded Receipt"}
+                    </span>
+                    {account.image instanceof File ? (
+                      <span className="text-xs text-green-600">Ready to upload</span>
+                    ) : (
+                      <button className="text-xs text-purple-600 hover:text-purple-800 break-words" onClick={() => window.open(account.image, "_blank")}>
+                        View Full Image
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <label
+                    htmlFor={`upload-${account._id}`}
+                    className={`flex items-center cursor-pointer ${
+                      account["col9"]?.toUpperCase() === "YES" ? "text-red-600 font-medium" : "text-purple-600"
+                    } hover:text-purple-800`}
+                  >
+                    <Upload className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span className="text-xs break-words">
+                      {account["col9"]?.toUpperCase() === "YES" ? "Required Upload" : "Upload Receipt"}
+                      {account["col9"]?.toUpperCase() === "YES" && <span className="text-red-500 ml-1">*</span>}
+                    </span>
+                  </label>
+
+                  <input
+                    id={`upload-${account._id}`}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={(e) => handleImageUpload(account._id, e)}
+                    disabled={!isSelected}
+                  />
+
+                  <button
+                    onClick={() => {
+                      setCurrentCaptureId(account._id);
+                      startCamera();
+                    }}
+                    disabled={!isSelected || isCameraLoading}
+                    className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Camera className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span>{isCameraLoading ? "Loading..." : "Take Photo"}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })
+    ) : (
+      <div className="text-center text-gray-500 py-6 text-sm">
+        {searchTerm || selectedGivenBy.length > 0 || selectedNames.length > 0
+          ? "No tasks matching your search or filters"
+          : "No pending tasks found for today, tomorrow, or past due dates"}
       </div>
-    </div>
-  ) : (
-    <div className="flex flex-col gap-2">
-      {/* File Upload Button */}
-      <label
-        htmlFor={`upload-${account._id}`}
-        className={`flex items-center cursor-pointer ${
-          account["col9"]?.toUpperCase() === "YES"
-            ? "text-red-600 font-medium"
-            : "text-purple-600"
-        } hover:text-purple-800`}
-      >
-        <Upload className="h-4 w-4 mr-1 flex-shrink-0" />
-        <span className="text-xs break-words">
-          {account["col9"]?.toUpperCase() === "YES"
-            ? "Required Upload"
-            : "Upload Receipt"}
-          {account["col9"]?.toUpperCase() === "YES" && (
-            <span className="text-red-500 ml-1">*</span>
-          )}
-        </span>
-      </label>
+    )}
+  </div>
+</div>
 
-      <input
-        id={`upload-${account._id}`}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => handleImageUpload(account._id, e)}
-        disabled={!isSelected}
-      />
-
-      {/* Camera Capture Button */}
-      <button
-        onClick={() => {
-          setCurrentCaptureId(account._id);
-          startCamera();
-        }}
-        disabled={!isSelected || isCameraLoading}
-        className="flex items-center text-blue-600 hover:text-blue-800 text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Camera className="h-4 w-4 mr-1 flex-shrink-0" />
-        <span>
-          {isCameraLoading ? "Loading..." : "Take Photo"}
-        </span>
-      </button>
-    </div>
-  )}
-</td>
-                        </tr>
-                      )
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan="14" className="px-6 py-4 text-center text-gray-500">
-                        {searchTerm || selectedGivenBy.length > 0 || selectedNames.length > 0
-                          ? "No tasks matching your search or filters"
-                          : "No pending tasks found for today, tomorrow, or past due dates"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-
-                </table>
-              </div>
             </>
           )}
         </div>
